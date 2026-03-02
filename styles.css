@@ -1,0 +1,99 @@
+body {
+    background-color: #f4f7f6;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+    padding: 20px;
+}
+
+.contenedor {
+    max-width: 750px;
+    margin: auto;
+}
+
+.tarjeta {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    margin-bottom: 25px;
+}
+
+h1 { font-size: 20px; color: #2c3e50; margin: 0 0 10px 0; }
+h2 { font-size: 16px; color: #34495e; margin-bottom: 15px; }
+
+.descripcion { font-size: 13px; color: #7f8c8d; margin-bottom: 20px; }
+
+.fila-inputs { display: flex; gap: 15px; }
+.campo { flex: 0.9; }
+
+label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 5px; }
+
+input, select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #dcdde1;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.persona-input {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding: 10px;
+    background: #fdfdfd;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    align-items: center;
+}
+
+.btn-borrar {
+    background: #ffeded;
+    color: #e74c3c;
+    border: none;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn-borrar:hover { background: #e74c3c; color: white; }
+
+.botones { display: flex; justify-content: space-between; margin-top: 15px; }
+
+button { padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; border: none; }
+
+.btn-calcular { background: #2ecc71; color: white; }
+.btn-añadir { background: #f1f2f6; color: #2f3640; }
+
+.hidden { display: none; }
+
+.bloque-resumen {
+    display: flex;
+    justify-content: space-around;
+    background: #f0f9ff;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #d0e8ff;
+}
+
+.dato-info { font-weight: bold; font-size: 14px; color: #0077cc; }
+
+.fila-dinero {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #f1f1f1;
+}
+
+.error {
+    background: #fff5f5;
+    color: #c0392b;
+    padding: 10px;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: bold;
+}
