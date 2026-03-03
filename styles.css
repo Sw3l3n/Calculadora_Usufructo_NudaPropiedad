@@ -242,3 +242,50 @@ input:focus {
     height: 42px; /* Misma altura que los inputs */
     margin-bottom: 0;
 }
+
+/* Contenedor de resultados de Plusvalía */
+.plusvalia-resultado-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Espacio entre el bloque Suelo y Beneficio */
+    margin-top: 15px;
+}
+
+/* Bloque oscuro estilo Imagen 8 */
+.bloque-oscuro-plusvalia {
+    background-color: #1e293b; /* Color oscuro del fondo */
+    color: #f1f5f9; /* Color de texto claro */
+    padding: 20px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.plus-label {
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.9;
+}
+
+.plus-value {
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+/* Ajuste para el mensaje de éxito final */
+.msg-finalizado {
+    text-align: center;
+    color: #10b981;
+    font-weight: 800;
+    margin-top: 20px;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
