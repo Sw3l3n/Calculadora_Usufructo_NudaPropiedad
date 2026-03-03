@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>MarBlau - Plusvalía</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body onload="verificarAcceso()">
+    <div id="login-box" class="contenedor" style="margin-top: 100px; text-align: center;">
+        <div class="tarjeta">
+            <img src="logo.jpeg" alt="MarBlau" style="max-width: 200px;">
+            <p style="margin: 20px 0; font-weight: 600;">Acceso Privado</p>
+            <input type="password" id="pass_input" style="text-align: center; max-width: 300px; margin-bottom: 15px;" placeholder="Contraseña">
+            <button class="btn-calcular" style="display: block; margin: auto; max-width: 300px;" onclick="comprobarPass()">ENTRAR</button>
+        </div>
+    </div>
+
+    <div id="contenido-privado" class="contenedor hidden">
+        <div class="nav-menu">
+            <button onclick="location.href='index.html'">Usufructo</button>
+            <button class="activo">Plusvalía</button>
+            <button onclick="cerrarSesion()" style="background:#fee2e2; color:#ef4444;">Salir</button>
+        </div>
+
+        <div class="tarjeta">
+            <div style="text-align: center;"><img src="logo.jpeg" style="max-width: 90px; margin-bottom: 10px;"></div>
+            <h1>Cálculo de Plusvalía</h1>
+            
+            <div class="fila-inputs">
+                <div class="campo"><label>Fecha Adquisición</label><input type="date" id="f_c"></div>
+                <div class="campo"><label>Fecha Venta</label><input type="date" id="f_v"></div>
+            </div>
+            <div class="fila-inputs">
+                <div class="campo"><label>Valor Suelo (€)</label><input type="number" id="v_s"></div>
+                <div class="campo"><label>Valor Construido (€)</label><input type="number" id="v_c"></div>
+            </div>
+            <div class="fila-inputs">
+                <div class="campo"><label>Precio Compra (€)</label><input type="number" id="p_c"></div>
+                <div class="campo"><label>Precio Venta (€)</label><input type="number" id="p_v"></div>
+            </div>
+            <button class="btn-calcular" onclick="calc()">CALCULAR</button>
+        </div>
+
+        <div id="res" class="tarjeta hidden">
+            <div class="bloque-resumen-azul" id="meta-p"></div>
+            <div class="excel-box"><div class="excel-header">PLUSVALÍA SUELO</div><div class="excel-value" id="r_s">0 €</div></div>
+            <div class="excel-box"><div class="excel-header">PLUSVALÍA BENEFICIO</div><div class="excel-value" id="r_b">0 €</div></div>
+            <p style="text-align:center; color:#10b981; font-weight:bold;">✓ CÁLCULO FINALIZADO</p>
+        </div>
+    </div>
+
+    <script>
+        const CLAVE = "marblau2026";
+        function comprobarPass() { if(document.getElementById('pass_input').value === CLAVE) { sessionStorage.setItem('sesion_marblau', 'ok'); verificarAcceso(); } }
+        function verificarAcceso() { if(sessionStorage.getItem('sesion_marblau') === 'ok') { document.getElementById('login-box').classList.add('hidden'); document.getElementById('contenido-privado').classList.remove('hidden'); } }
+        function cerrarSesion() { sessionStorage.clear(); location.reload(); }
+
+        function calc() {
+            const vs = parseFloat(document.getElementById('v_s').value), vc = parseFloat(document.getElementById('v_c').value);
+            const pc = parseFloat(document.getElementById('p_c').value), pv = parseFloat(document.getElementById('p_v').value);
+            const d1 = new Date(document.getElementById('f_c').value), d2 = new Date(document.getElementById('f_v').value);
+            
+            let años = d2.getFullYear() - d1.getFullYear();
+            const coefs = {1:0.15, 2:0.14, 3:0.14, 4:0.16, 5:0.18, 6:0.19, 7:0.2, 8:0.19, 9:0.15, 10:0.12, 11:0.1, 12:0.09, 13:0.09, 14:0.09, 15:0.9, 16:0.1, 17:0.13, 18:0.17, 19:0.23, 20:0.4};
+            let c = coefs[años > 20 ? 20 : (años < 1 ? 1 : años)] || 0.15;
+
+            let plusSuelo = vs * c * 0.3;
+            let plusBen = (pv - pc) * (vs / vc) * 0.3;
+
+            document.getElementById('res').classList.remove('hidden');
+            document.getElementById('meta-p').innerHTML = `Años transcurridos: ${años} | Coeficiente aplicado: ${c}`;
+            document.getElementById('r_s').innerText = plusSuelo.toLocaleString('es-ES', {minimumFractionDigits:2}) + " €";
+            document.getElementById('r_b').innerText = (plusBen > 0 ? plusBen : 0).toLocaleString('es-ES', {minimumFractionDigits:2}) + " €";
+        }
+    </script>
+</body>
+</html>
