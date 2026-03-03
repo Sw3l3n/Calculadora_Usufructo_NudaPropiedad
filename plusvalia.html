@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>MarBlau - Cálculo de Plusvalía</title>
+    <title>MarBlau - Plusvalía Municipal</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body onload="iniciarApp()">
@@ -25,58 +25,42 @@
 
         <div class="tarjeta">
             <div style="text-align: center; margin-bottom: 20px;"><img src="logom.png" style="max-width: 100px;"></div>
-            <h1 style="text-align: center; margin-bottom: 30px;">Cálculo de Plusvalía Municipal</h1>
+            <h1 style="text-align: center; margin-bottom: 30px;">Cálculo de Plusvalía</h1>
             
-            <div class="fila-inputs" style="margin-bottom: 25px;">
-                <div class="campo" style="flex: 1;">
-                    <label>Fecha de adquisición</label>
-                    <input type="date" id="f_adquisicion">
-                </div>
-                <div class="campo" style="flex: 1;">
-                    <label>Fecha de transmisión (Venta)</label>
-                    <input type="date" id="f_transmision">
-                </div>
-            </div>
-
-            <h2 style="font-size: 14px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; color: #64748b; margin-top: 30px;">VALORES CATASTRALES (Al momento de la venta)</h2>
-            <div class="fila-inputs" style="margin-bottom: 25px;">
+            <div class="fila-inputs">
                 <div class="campo" style="flex: 1;">
                     <label>Valor Catastral Suelo (€)</label>
-                    <input type="number" id="v_suelo" placeholder="Ej: 50000" style="font-weight: 700;">
+                    <input type="number" id="v_suelo" placeholder="Ej: 60000" style="font-weight: 800; font-size: 20px;">
                 </div>
                 <div class="campo" style="flex: 1;">
-                    <label>Valor Catastral Total (€)</label>
-                    <input type="number" id="v_total" placeholder="Ej: 120000">
+                    <label>Años de Tenencia</label>
+                    <input type="number" id="años_tenencia" placeholder="Ej: 10">
                 </div>
             </div>
 
-            <h2 style="font-size: 14px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; color: #64748b; margin-top: 30px;">PRECIOS DE ESCRITURA</h2>
-            <div class="fila-inputs" style="margin-bottom: 25px;">
+            <div class="fila-inputs">
                 <div class="campo" style="flex: 1;">
-                    <label>Precio de Adquisición (€)</label>
-                    <input type="number" id="p_adquisicion" placeholder="Ej: 100000">
+                    <label>Tipo Impositivo (%)</label>
+                    <input type="number" id="tipo_itp" value="30">
                 </div>
                 <div class="campo" style="flex: 1;">
-                    <label>Precio de Transmisión (€)</label>
-                    <input type="number" id="p_transmision" placeholder="Ej: 180000" style="font-weight: 700;">
+                    <label>Coeficiente (%)</label>
+                    <input type="number" id="coeficiente" placeholder="Ej: 0.15">
                 </div>
             </div>
             
-            <div style="margin-top: 35px; text-align: center;">
-                <button class="btn-calcular" onclick="calcularPlusvalia()" style="width: 100%; max-width: 400px;">Calcular Comparativa de Plusvalía</button>
+            <div style="margin-top: 25px;">
+                <button class="btn-calcular" onclick="calcularPlusvaliaSimple()" style="width: 100%;">Calcular Cuota</button>
             </div>
         </div>
 
         <div id="seccion-informe" class="tarjeta hidden">
-            <h2 style="margin-top: 0; font-size: 18px; color: var(--accent-color); border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">Comparativa de Métodos de Cálculo</h2>
+            <h2 style="margin-top: 0; font-size: 18px; color: var(--accent-color); border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">Resultado del Cálculo</h2>
             
-            <div id="metadatos-azul" class="bloque-resumen-azul">
-                </div>
+            <div id="metadatos-azul" class="bloque-resumen-azul"></div>
             
             <div id="resultados-lista">
                 </div>
-            
-            <p style="text-align: center; color: #10b981; font-weight: 700; font-size: 14px; margin-top: 25px;">✓ Selección recomendada: Se aplicará el método que resulte en la cuantía menor para el contribuyente.</p>
         </div>
     </div>
 
@@ -84,8 +68,6 @@
         const CLAVE = "pagame";
 
         function iniciarApp() {
-            // Fecha de transmisión por defecto a hoy
-            document.getElementById('f_transmision').valueAsDate = new Date();
             if(sessionStorage.getItem('sesion_marblau') === 'ok') verificarAcceso();
         }
 
@@ -105,83 +87,34 @@
 
         function cerrarSesion() { sessionStorage.clear(); location.reload(); }
 
-        function calcularPlusvalia() {
-            // Obtención de datos
-            const f_adq_str = document.getElementById('f_adquisicion').value;
-            const f_tra_str = document.getElementById('f_transmision').value;
+        function calcularPlusvaliaSimple() {
             const v_suelo = parseFloat(document.getElementById('v_suelo').value);
-            const v_total = parseFloat(document.getElementById('v_total').value);
-            const p_adq = parseFloat(document.getElementById('p_adquisicion').value);
-            const p_tra = parseFloat(document.getElementById('p_transmision').value);
-            
-            if(!f_adq_str || !f_tra_str || !v_suelo || !v_total || !p_adq || !p_tra) return alert("Faltan datos obligatorios para el cálculo.");
+            const años = document.getElementById('años_tenencia').value;
+            const tipo = parseFloat(document.getElementById('tipo_itp').value) / 100;
+            const coef = parseFloat(document.getElementById('coeficiente').value) / 100;
 
-            const f_adq = new Date(f_adq_str);
-            const f_tra = new Date(f_tra_str);
-            
-            if(f_tra <= f_adq) return alert("La fecha de transmisión debe ser posterior a la de adquisición.");
+            if(!v_suelo || !tipo || !coef) return alert("Faltan datos");
 
-            // 1. Cálculo de años de tenencia
-            let años = f_tra.getFullYear() - f_adq.getFullYear();
-            const mes_tra = f_tra.getMonth();
-            const mes_adq = f_adq.getMonth();
-            if (mes_tra < mes_adq || (mes_tra === mes_adq && f_tra.getDate() < f_adq.getDate())) {
-                años--;
-            }
-            
-            // Lógica simplificada de coeficientes (Ejemplo para 2024, ajustar según ordenanza municipal real)
-            const coefsArr = [0.15, 0.14, 0.14, 0.16, 0.18, 0.19, 0.20, 0.19, 0.15, 0.12, 0.10, 0.09, 0.09, 0.09, 0.09, 0.10, 0.13, 0.17, 0.23, 0.40];
-            let coef = 0;
-            if(años < 1) coef = 0.15; // Coeficiente para menos de 1 año (plusvalía por generación en menos de un año)
-            else if(años >= 20) coef = 0.40;
-            else coef = coefsArr[años];
-            
-            // Tipo impositivo simplificado (Ejemplo 30%)
-            const tipoImpositivo = 0.30; 
+            const baseImponible = v_suelo * coef;
+            const cuota = baseImponible * tipo;
 
-            // 2. Método Objetivo (Estimación directa)
-            let baseImponibleObjetivo = v_suelo * coef;
-            let cuotaObjetivo = baseImponibleObjetivo * tipoImpositivo;
-
-            // 3. Método Real (Incremento de valor)
-            let incrementoRealEscritura = p_tra - p_adq;
-            let cuotaReal = 0;
-            let baseImponibleReal = 0;
-            let porcentajeSuelo = v_suelo / v_total;
-
-            if(incrementoRealEscritura > 0) {
-                baseImponibleReal = incrementoRealEscritura * porcentajeSuelo;
-                cuotaReal = baseImponibleReal * tipoImpositivo;
-            } else {
-                // No hay incremento de valor, por lo tanto no hay plusvalía real (No sujeción por pérdida)
-                cuotaReal = 0;
-            }
-
-            // Visualización de Resultados (Mismo diseño centrado e integrado)
             const cajaAzul = document.getElementById('metadatos-azul');
             cajaAzul.innerHTML = `
-                <div class="resumen-linea-1">Años de Tenencia: ${años < 1 ? 'Menos de 1 año' : años + ' años'}</div>
-                <div class="resumen-linea-2">Coeficiente aplicado: ${coef} | Tipo Impositivo: ${tipoImpositivo * 100}%</div>
+                <div class="resumen-linea-1">Cuota Tributaria: ${cuota.toLocaleString('es-ES', {minimumFractionDigits:2})} €</div>
+                <div class="resumen-linea-2">Base Imponible: ${baseImponible.toLocaleString('es-ES', {minimumFractionDigits:2})} €</div>
             `;
 
-            let htmlResultados = `
+            document.getElementById('resultados-lista').innerHTML = `
                 <div class="resultado-titular">
-                    <span class="nombre-titular">MÉTODO OBJETIVO (Coeficientes)</span>
-                    <div class="detalle-item">• Base Imponible: ${baseImponibleObjetivo.toLocaleString('es-ES', {minimumFractionDigits:2})} €</div>
-                    <div class="detalle-item">• Cuota Tributaria Estimada: <strong>${cuotaObjetivo.toLocaleString('es-ES', {minimumFractionDigits:2})} €</strong></div>
-                </div>
-                
-                <div class="resultado-titular">
-                    <span class="nombre-titular">MÉTODO REAL (Incremento de Valor)</span>
-                    <div class="detalle-item">• Incremento de Valor en Escritura: ${incrementoRealEscritura.toLocaleString('es-ES', {minimumFractionDigits:2})} €</div>
-                    <div class="detalle-item">• Proporción Valor Suelo: ${(porcentajeSuelo * 100).toFixed(2)}%</div>
-                    <div class="detalle-item">• Base Imponible Real: ${baseImponibleReal.toLocaleString('es-ES', {minimumFractionDigits:2})} €</div>
-                    <div class="detalle-item">• Cuota Tributaria Real: <strong>${cuotaReal.toLocaleString('es-ES', {minimumFractionDigits:2})} €</strong></div>
+                    <span class="nombre-titular">DESGLOSE OBJETIVO</span>
+                    <div class="detalle-item">• Valor Suelo: ${v_suelo.toLocaleString('es-ES')} €</div>
+                    <div class="detalle-item">• Coeficiente aplicado: ${(coef * 100).toFixed(2)}%</div>
+                    <div class="detalle-item">• Tipo Impositivo: ${(tipo * 100).toFixed(2)}%</div>
+                    <div class="total-titular">Total a pagar: ${cuota.toLocaleString('es-ES', {minimumFractionDigits:2})} €</div>
                 </div>
             `;
 
             document.getElementById('seccion-informe').classList.remove('hidden');
-            document.getElementById('resultados-lista').innerHTML = htmlResultados;
         }
     </script>
 </body>
