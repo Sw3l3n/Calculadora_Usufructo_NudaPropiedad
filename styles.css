@@ -1,17 +1,30 @@
+/* --- VARIABLES CORPORATIVAS MARBLAU --- */
 :root {
     --bg-color: #f8fafc;
     --card-bg: #ffffff;
     --text-color: #1e293b;
     --border-color: #e2e8f0;
-    --accent-color: #1e40af;
+    --accent-color: #1e40af; /* Azul corporativo */
+    
+    /* Colores para la caja de metadatos azul claro */
+    --meta-bg: #eff6ff;
+    --meta-border: #bfdbfe;
+    --meta-text: #1e40af;
+    --meta-label: #3b82f6;
+
+    /* Colores para la caja de texto oscuro (copiar) */
+    --copy-bg: #1e293b;
+    --copy-text: #f1f5f9;
 }
 
+/* --- ESTILOS GENERALES --- */
 body {
     background-color: var(--bg-color);
     color: var(--text-color);
-    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
     padding: 20px;
+    transition: 0.3s ease;
 }
 
 .contenedor {
@@ -28,10 +41,14 @@ body {
     margin-bottom: 20px;
 }
 
+.hidden { display: none !important; }
+
+/* --- NAVEGACIÓN (Menú) --- */
 .nav-menu {
     display: flex;
     gap: 10px;
     margin-bottom: 20px;
+    justify-content: center;
 }
 
 .nav-menu button {
@@ -40,87 +57,149 @@ body {
     border: none;
     cursor: pointer;
     font-weight: 600;
+    font-size: 14px;
     background: var(--border-color);
     color: var(--text-color);
+    transition: 0.2s;
 }
+
+.nav-menu button:hover { background: #d1d5db; }
 
 .nav-menu button.activo {
     background: var(--accent-color);
     color: white;
 }
 
-.fila-inputs {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 20px;
-    align-items: flex-end;
+/* --- FORMULARIO Y CAMPOS (Como en image_3.png) --- */
+.seccion-titulo {
+    text-align: center;
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 25px;
+    color: var(--text-color);
 }
 
-.campo { display: flex; flex-direction: column; gap: 8px; }
-label { font-size: 13px; font-weight: 700; text-transform: uppercase; color: #64748b; }
+.fila-inputs {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
 
-input, select {
-    padding: 12px;
+.campo {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-width: 250px;
+}
+
+label {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #64748b;
+    letter-spacing: 0.5px;
+}
+
+input {
+    padding: 12px 15px;
     border: 1px solid var(--border-color);
     border-radius: 8px;
     background: var(--card-bg);
     color: var(--text-color);
     font-size: 16px;
+    transition: 0.2s;
+}
+
+input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+input[type="number"] { font-weight: bold; }
+
+/* --- BOTONES DE ACCIÓN --- */
+.botones-fila {
+    display: flex;
+    gap: 15px;
+    margin-top: 25px;
+    justify-content: center;
 }
 
 .btn-calcular {
     background: var(--accent-color);
     color: white;
     border: none;
-    padding: 15px 25px;
-    border-radius: 8px;
-    font-weight: 800;
+    padding: 15px 30px;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 16px;
     cursor: pointer;
+    transition: all 0.2s;
     text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
-.btn-añadir { background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
-.btn-borrar { background: #ef4444; color: white; border: none; width: 40px; height: 40px; border-radius: 8px; cursor: pointer; }
+.btn-calcular:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-calcular:active { transform: translateY(0); }
 
-/* Nueva visualización de resultados */
-.bloque-resumen-azul {
-    background: #eff6ff;
-    border: 1px solid #bfdbfe;
-    border-radius: 10px;
-    padding: 20px;
+/* --- RESULTADOS VISUALES --- */
+/* Caja azul claro de metadatos (Como en image_1.png) */
+.bloque-metadatos {
+    background-color: var(--meta-bg);
+    border: 1px solid var(--meta-border);
+    border-radius: 12px;
+    padding: 20px 25px;
     margin-bottom: 20px;
     text-align: center;
 }
 
-.resumen-linea-1 { color: #1e40af; font-size: 18px; font-weight: 800; margin-bottom: 5px; }
-.resumen-linea-2 { color: #3b82f6; font-size: 14px; font-weight: 600; }
-
-.resultado-titular {
-    border-bottom: 1px solid var(--border-color);
-    padding: 15px 0;
-}
-
-.resultado-titular:last-child { border-bottom: none; }
-
-.nombre-titular {
+.meta-titulo {
+    color: var(--meta-text);
+    font-size: 18px;
     font-weight: 800;
-    color: var(--accent-color);
-    font-size: 16px;
-    display: block;
-    margin-bottom: 5px;
+    margin-bottom: 10px;
 }
 
-.detalle-item {
+.meta-detalles {
+    color: var(--meta-label);
     font-size: 14px;
-    color: #475569;
-    margin-left: 10px;
+    font-weight: 600;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
 }
 
-.total-titular {
-    font-weight: 700;
-    font-size: 17px;
-    color: var(--text-color);
-    margin-top: 8px;
+/* Caja de texto oscuro (Como en image_2.png) */
+.informe-copiar-contenedor {
+    background-color: var(--copy-bg);
+    border-radius: 10px;
+    padding: 25px;
+    position: relative;
+    border: 1px solid rgba(255,255,255,0.1);
 }
 
-.hidden { display: none !important; }
+.informe-copiar-texto {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    white-space: pre-wrap;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--copy-text);
+}
+
+.btn-copiar {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(255,255,255,0.1);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+}
+.btn-copiar:hover { background: rgba(255,255,255,0.2); }
