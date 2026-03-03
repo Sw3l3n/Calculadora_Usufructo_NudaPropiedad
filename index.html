@@ -2,218 +2,211 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>MarBlau - Usufructo y Nuda propiedad</title>
+    <title>MarBlau - Usufructo y Nuda Propiedad</title>
     <link rel="stylesheet" href="styles.css">
 </head>
-<body onload="verificarAcceso()">
+<body onload="iniciarApp()">
 
-<div id="login-box" class="contenedor" style="margin-top: 100px;">
-    <div class="tarjeta" style="text-align: center;">
-        <h1>MarBlau</h1>
-        <p class="descripcion">Introduce tu clave de acceso</p>
-        <input type="password" id="pass_input" style="text-align: center; max-width: 250px; margin-bottom: 15px;" placeholder="Contraseña">
-        <br>
-        <button class="btn-calcular" style="max-width: 250px;" onclick="comprobarPass()">ENTRAR</button>
-        <p id="error-pass" class="error hidden">Contraseña incorrecta</p>
-    </div>
-</div>
-
-<div id="contenido-privado" class="contenedor hidden">
-    
-    <div class="tarjeta" style="padding: 10px; text-align: center; margin-bottom: 15px;">
-        <button class="btn-añadir" style="background: #2c3e50; color: white;">Usufructo</button>
-        <button class="btn-añadir" onclick="location.href='plusvalia.html'">Plusvalía</button>
-        <button class="btn-borrar" onclick="cerrarSesion()" style="margin-left: 20px;">Cerrar Sesión</button>
-    </div>
-
-    <div class="tarjeta">
-        <h1>Cálculo de Usufructo y Nuda Propiedad</h1>
-        <p class="descripcion">Todos los campos son obligatorios para un cálculo exacto.</p>
-        <div class="fila-inputs">
-            <div class="campo">
-                <label>Precio de venta total (€)</label>
-                <input type="number" id="precio" placeholder="0.00">
-            </div>
-            <div class="campo">
-                <label>Fecha de la venta</label>
-                <input type="date" id="f_venta">
-            </div>
+    <div id="login-box" class="contenedor" style="margin-top: 100px;">
+        <div class="tarjeta" style="text-align: center;">
+            <img src="logo.jpeg" alt="MarBlau" style="max-width: 200px; margin-bottom: 20px;">
+            <p style="color: #64748b; font-weight: 600; margin-bottom: 20px;">Acceso Privado</p>
+            <input type="password" id="pass_input" style="text-align: center; max-width: 300px; margin-bottom: 15px;" placeholder="Contraseña">
+            <button class="btn-calcular" style="display: block; margin: auto; max-width: 300px;" onclick="comprobarPass()">ENTRAR</button>
         </div>
     </div>
 
-    <div class="tarjeta">
-        <h2>Titulares y Derechos</h2>
-        <div id="lista-personas">
-            <div class="persona-input">
-                <input type="text" class="nombre" placeholder="Nombre">
-                <select class="tipo" onchange="gestionarFecha(this)">
-                    <option value="pleno">Pleno dominio</option>
-                    <option value="usufructo">Usufructo</option>
-                    <option value="nuda">Nuda propiedad</option>
-                </select>
-                <input type="date" class="fnac" style="display:none;" title="Fecha Nacimiento">
-                <input type="number" class="pct" placeholder="% de participación">
-                <button class="btn-borrar" onclick="this.parentElement.remove()">×</button>
+    <div id="contenido-privado" class="contenedor hidden">
+        
+        <div class="nav-menu">
+            <button class="activo">Usufructo</button>
+            <button onclick="location.href='plusvalia.html'">Plusvalía</button>
+            <button onclick="cerrarSesion()" style="background:#fee2e2; color:#ef4444;">Salir</button>
+        </div>
+
+        <div class="tarjeta">
+            <div style="text-align: center; margin-bottom: 20px;"><img src="logo.jpeg" style="max-width: 100px;"></div>
+            <h1>Cálculo de Usufructo y Nuda Propiedad</h1>
+            
+            <div class="fila-inputs" style="margin-bottom: 30px; display: flex; gap: 15px;">
+                <div class="campo" style="flex: 2;">
+                    <label>Valor propiedad (€)</label>
+                    <input type="number" id="valor_propiedad" placeholder="Ej: 200000" style="font-size: 18px; font-weight: bold;">
+                </div>
+                <div class="campo" style="flex: 1;">
+                    <label>Fecha de venta</label>
+                    <input type="date" id="fecha_venta" style="font-size: 18px; font-weight: bold;">
+                </div>
+            </div>
+
+            <h2>Titulares y Derechos</h2>
+            <div id="contenedor-titulares"></div>
+            
+            <div class="botones">
+                <button class="btn-añadir" onclick="agregarTitular()">+ Añadir Titular</button>
+                <button class="btn-calcular" onclick="generarInforme()">GENERAR INFORME DE REPARTO</button>
             </div>
         </div>
-        <div class="botones">
-            <button class="btn-añadir" onclick="añadirPersona()">+ Añadir Titular</button>
-            <button class="btn-calcular" onclick="calcular()">CALCULAR REPARTO</button>
+
+        <div id="seccion-informe" class="tarjeta hidden">
+            <h2>Resultado del Cálculo</h2>
+            
+            <div id="metadatos-azul" class="bloque-resumen-azul" style="text-align: center;"></div>
+            
+            <div class="informe-contenedor" style="position: relative;">
+                <button class="btn-copiar" style="position: absolute; top: 10px; right: 10px;" onclick="copiarInforme()">Copiar Texto</button>
+                <div class="informe-caja" id="informe-texto"></div>
+            </div>
         </div>
     </div>
 
-    <div id="resultado" class="tarjeta hidden">
-        <h2>Informe de Reparto</h2>
-        <div class="bloque-resumen">
-            <div class="dato-info">Edad del menor: <span id="res-edad">--</span> años</div>
-            <div class="dato-info">Coef. Usufructo: <span id="res-pct-u">--</span>%</div>
-            <div class="dato-info">Coef. Nuda: <span id="res-pct-np">--</span>%</div>
-        </div>
-        <div id="reparto-detallado"></div>
-        <div id="mensaje-error" class="error hidden" style="margin-top:20px;"></div>
-    </div>
-</div>
+    <script>
+        const CLAVE = "pagame";
 
-<script>
-const CLAVE = "marblau2026"; 
-
-function comprobarPass() {
-    if(document.getElementById('pass_input').value === CLAVE) {
-        sessionStorage.setItem('sesion_activa', 'si');
-        verificarAcceso();
-    } else { document.getElementById('error-pass').classList.remove('hidden'); }
-}
-
-function verificarAcceso() {
-    if(sessionStorage.getItem('sesion_activa') === 'si') {
-        document.getElementById('login-box').classList.add('hidden');
-        document.getElementById('contenido-privado').classList.remove('hidden');
-    }
-}
-
-function cerrarSesion() { sessionStorage.clear(); location.reload(); }
-
-function gestionarFecha(el) { el.parentElement.querySelector('.fnac').style.display = (el.value === 'usufructo') ? 'block' : 'none'; }
-
-function añadirPersona() {
-    const div = document.createElement('div');
-    div.className = 'persona-input';
-    div.innerHTML = `<input type="text" class="nombre" placeholder="Nombre">
-        <select class="tipo" onchange="gestionarFecha(this)">
-            <option value="pleno">Pleno dominio</option>
-            <option value="usufructo">Usufructo</option>
-            <option value="nuda">Nuda propiedad</option>
-        </select>
-        <input type="date" class="fnac" style="display:none;">
-        <input type="number" class="pct" placeholder="%">
-        <button class="btn-borrar" onclick="this.parentElement.remove()">×</button>`;
-    document.getElementById('lista-personas').appendChild(div);
-}
-
-function calcular() {
-    const precio = parseFloat(document.getElementById('precio').value);
-    const fVentaStr = document.getElementById('f_venta').value;
-    const bloques = document.querySelectorAll('.persona-input');
-    const errDiv = document.getElementById('mensaje-error');
-    
-    // 1. VALIDACIONES BÁSICAS
-    if (!precio || !fVentaStr) {
-        alert("Falta el precio o la fecha de venta.");
-        return;
-    }
-
-    let sumaPleno = 0;
-    let sumaUsufructo = 0;
-    let sumaNuda = 0;
-    let hayUsufructoSinFecha = false;
-
-    bloques.forEach(b => {
-        const tipo = b.querySelector('.tipo').value;
-        const pct = parseFloat(b.querySelector('.pct').value) || 0;
-        const fnac = b.querySelector('.fnac').value;
-
-        if (tipo === 'pleno') sumaPleno += pct;
-        if (tipo === 'usufructo') { 
-            sumaUsufructo += pct;
-            if (!fnac) hayUsufructoSinFecha = true;
+        function iniciarApp() {
+            // Establecer fecha de venta a hoy por defecto
+            document.getElementById('fecha_venta').valueAsDate = new Date();
+            verificarAcceso();
         }
-        if (tipo === 'nuda') sumaNuda += pct;
-    });
 
-    if (hayUsufructoSinFecha) {
-        alert("Debes indicar la fecha de nacimiento de los usufructuarios.");
-        return;
-    }
-
-    // Validación de porcentajes: La suma de Pleno + Usufructo debe ser 100% 
-    // Y la suma de Pleno + Nuda debe ser 100%
-    if (Math.round(sumaPleno + sumaUsufructo) !== 100 || Math.round(sumaPleno + sumaNuda) !== 100) {
-        errDiv.innerText = `Error: Los porcentajes no cuadran. (Pleno+Usufructo: ${sumaPleno + sumaUsufructo}%) (Pleno+Nuda: ${sumaPleno + sumaNuda}%)`;
-        errDiv.classList.remove('hidden');
-        document.getElementById('resultado').classList.add('hidden');
-        return;
-    } else {
-        errDiv.classList.add('hidden');
-    }
-
-    // 2. CÁLCULO DE EDAD Y COEFICIENTES
-    const fVenta = new Date(fVentaStr);
-    let edadMenor = 999;
-
-    bloques.forEach(b => {
-        const t = b.querySelector('.tipo').value;
-        const n = new Date(b.querySelector('.fnac').value);
-        if (t === 'usufructo' && !isNaN(n)) {
-            let e = fVenta.getFullYear() - n.getFullYear();
-            if (fVenta.getMonth() < n.getMonth() || (fVenta.getMonth() === n.getMonth() && fVenta.getDate() < n.getDate())) e--;
-            if (e < edadMenor) edadMenor = e;
+        function comprobarPass() { 
+            if(document.getElementById('pass_input').value === CLAVE) { 
+                sessionStorage.setItem('sesion_marblau', 'ok'); 
+                verificarAcceso(); 
+            } else {
+                alert("Contraseña incorrecta");
+            }
         }
-    });
 
-    if (edadMenor === 999) edadMenor = 0;
-    let uL = Math.max(10, Math.min(70, 89 - edadMenor));
-    let npL = 100 - uL;
+        function verificarAcceso() { 
+            if(sessionStorage.getItem('sesion_marblau') === 'ok') {
+                document.getElementById('login-box').classList.add('hidden'); 
+                document.getElementById('contenido-privado').classList.remove('hidden'); 
+            }
+        }
 
-    // 3. GENERAR RESULTADO DETALLADO
-    document.getElementById('resultado').classList.remove('hidden');
-    document.getElementById('res-edad').innerText = (edadMenor === 0) ? "N/A" : edadMenor;
-    document.getElementById('res-pct-u').innerText = uL;
-    document.getElementById('res-pct-np').innerText = npL;
+        function cerrarSesion() { sessionStorage.clear(); location.reload(); }
 
-    let html = `<div class="fila-dinero" style="background:#eee; font-weight:bold;">
-                    <span>Nombre y Concepto</span>
-                    <span>% Titularidad</span>
-                    <span>Euros a Percibir</span>
-                </div>`;
+        function agregarTitular() {
+            const div = document.createElement('div');
+            // Usamos una clase específica para las filas de datos
+            div.className = 'titular-row fila-inputs'; 
+            div.style.display = 'flex';
+            div.style.gap = '10px';
+            div.style.marginBottom = '10px';
+            div.style.alignItems = 'flex-end';
+
+            div.innerHTML = `
+                <div class="campo" style="flex:2.5;"><label>Nombre</label><input type="text" class="t-nombre" placeholder="Nombre completo"></div>
+                <div class="campo" style="flex:1.5;"><label>Tipo de propiedad</label>
+                    <select class="t-tipo" onchange="this.parentElement.parentElement.querySelector('.t-fecha').disabled=(this.value!=='usufructo')">
+                        <option value="pleno">Pleno dominio</option>
+                        <option value="nuda">Nuda propiedad</option>
+                        <option value="usufructo">Usufructo</option>
+                    </select>
+                </div>
+                <div class="campo" style="flex:0.6;"><label>%</label><input type="number" class="t-pct" value="100"></div>
+                <div class="campo" style="flex:1.2;"><label>Fecha Nac.</label><input type="date" class="t-fecha" disabled></div>
+                <button class="btn-borrar" onclick="this.parentElement.remove()" style="margin-bottom:5px;">×</button>
+            `;
+            document.getElementById('contenedor-titulares').appendChild(div);
+        }
+
+        function generarInforme() {
+            const valorTotal = parseFloat(document.getElementById('valor_propiedad').value);
+            const fechaVentaStr = document.getElementById('fecha_venta').value;
+            const filas = document.querySelectorAll('.titular-row');
+            
+            if(!valorTotal || !fechaVentaStr || filas.length === 0) {
+                alert("Faltan datos: Valor, Fecha de venta o Titulares.");
+                return;
+            }
+
+            const fechaReferencia = new Date(fechaVentaStr);
+            let edadMenor = 999;
+
+            // 1. Calcular edad del menor respecto a Fecha de Venta
+            filas.forEach(f => {
+                const tipo = f.querySelector('.t-tipo').value;
+                const fNacStr = f.querySelector('.t-fecha').value;
+                if(tipo === 'usufructo' && fNacStr) {
+                    let fNac = new Date(fNacStr);
+                    let edad = fechaReferencia.getFullYear() - fNac.getFullYear();
+                    const m = fechaReferencia.getMonth() - fNac.getMonth();
+                    if (m < 0 || (m === 0 && fechaReferencia.getDate() < fNac.getDate())) edad--;
+                    if(edad < edadMenor) edadMenor = edad;
+                }
+            });
+
+            const uPct = edadMenor === 999 ? 0 : Math.max(10, Math.min(70, 89 - edadMenor));
+            const nPct = 100 - uPct;
+            
+            let sumaU_pct = 0, sumaN_pct = 0, sumaP_pct = 0; 
+            let totalU_eur = 0, totalN_eur = 0, totalP_eur = 0, granTotal = 0; 
+            let propietarios = {};
+
+            // 2. Procesar cálculos individuales
+            filas.forEach(f => {
+                let nombre = (f.querySelector('.t-nombre').value || "Titular").trim();
+                let nombreKey = nombre.toUpperCase();
+                let tipo = f.querySelector('.t-tipo').value;
+                let pct = parseFloat(f.querySelector('.t-pct').value) || 0;
                 
-    bloques.forEach(b => {
-        const nom = b.querySelector('.nombre').value || "Sin nombre";
-        const t = b.querySelector('.tipo').value;
-        const p = parseFloat(b.querySelector('.pct').value) || 0;
-        
-        let eur = 0;
-        let concepto = "";
-        
-        if (t === 'pleno') {
-            eur = precio * (p / 100);
-            concepto = "Pleno Dominio";
-        } else if (t === 'usufructo') {
-            eur = (precio * (uL / 100)) * (p / 100);
-            concepto = "Usufructo";
-        } else {
-            eur = (precio * (npL / 100)) * (p / 100);
-            concepto = "Nuda Propiedad";
+                let valor = 0, tipoTxt = "";
+
+                if(tipo === 'usufructo') { 
+                    valor = (valorTotal * (pct/100)) * (uPct/100); 
+                    tipoTxt = "Usufructo vitalicio"; 
+                    sumaU_pct += pct; totalU_eur += valor;
+                } else if(tipo === 'nuda') { 
+                    valor = (valorTotal * (pct/100)) * (nPct/100); 
+                    tipoTxt = "Nuda propiedad"; 
+                    sumaN_pct += pct; totalN_eur += valor;
+                } else { 
+                    valor = valorTotal * (pct/100); 
+                    tipoTxt = "Pleno dominio"; 
+                    sumaP_pct += pct; totalP_eur += valor;
+                }
+
+                if(!propietarios[nombreKey]) {
+                    propietarios[nombreKey] = { real: nombre, items: [], total: 0 };
+                }
+                propietarios[nombreKey].items.push(`${tipoTxt} (${pct}%): ${valor.toLocaleString('es-ES', {minimumFractionDigits:2})} €`);
+                propietarios[nombreKey].total += valor;
+                granTotal += valor;
+            });
+
+            // 3. Renderizar caja azul
+            document.getElementById('metadatos-azul').innerHTML = `
+                <div class="resumen-linea-1">Edad del menor: ${edadMenor === 999 ? 'N/A' : edadMenor + ' años'}, Usufructo: ${uPct}%</div>
+                <div class="resumen-linea-2" style="font-size: 14px; margin-top: 5px;">
+                    Usufructo: ${sumaU_pct}% | Nuda propiedad: ${sumaN_pct}% | Pleno dominio: ${sumaP_pct}%
+                </div>
+            `;
+
+            // 4. Renderizar texto plano
+            let txt = `Edad usufructuario para el calculo: ${edadMenor === 999 ? 'N/A' : edadMenor} años, usufructo ${uPct}%\n\n`;
+            for(let key in propietarios) {
+                let p = propietarios[key];
+                txt += `Propietario: ${p.real}\n`;
+                p.items.forEach(i => txt += `${i}\n`);
+                txt += `Total para ${key}: ${p.total.toLocaleString('es-ES', {minimumFractionDigits:2})} €\n\n`;
+            }
+            if(totalU_eur > 0) txt += `Usufructo: ${totalU_eur.toLocaleString('es-ES', {minimumFractionDigits:2})} €\n`;
+            if(totalN_eur > 0) txt += `Nuda propiedad: ${totalN_eur.toLocaleString('es-ES', {minimumFractionDigits:2})} €\n`;
+            if(totalP_eur > 0) txt += `Pleno dominio: ${totalP_eur.toLocaleString('es-ES', {minimumFractionDigits:2})} €\n`;
+            txt += `Total repartido: ${granTotal.toLocaleString('es-ES', {minimumFractionDigits:2})} €`;
+
+            document.getElementById('seccion-informe').classList.remove('hidden');
+            document.getElementById('informe-texto').innerText = txt;
         }
 
-        html += `<div class="fila-dinero">
-                    <span><strong>${nom}</strong><br><small>${concepto}</small></span>
-                    <span>${p}%</span>
-                    <strong style="color:#2c3e50;">${eur.toLocaleString('es-ES', {minimumFractionDigits:2})} €</strong>
-                </div>`;
-    });
-    
-    document.getElementById('reparto-detallado').innerHTML = html;
-}
-</script>
+        function copiarInforme() {
+            navigator.clipboard.writeText(document.getElementById('informe-texto').innerText);
+            alert("Copiado");
+        }
+        
+        agregarTitular();
+    </script>
 </body>
 </html>
