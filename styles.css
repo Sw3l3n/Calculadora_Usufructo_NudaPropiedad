@@ -212,3 +212,33 @@ input:focus {
     .fila-inputs { flex-direction: column; }
     .campo { width: 100%; }
 }
+
+/* Contenedor de cada fila de titular */
+.titular-row {
+    display: flex;
+    flex-direction: row; /* Fuerza línea horizontal */
+    align-items: flex-end; /* Alinea los inputs por la base */
+    gap: 10px; /* Espacio entre columnas */
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+/* Ajuste individual de los campos dentro de la fila */
+.titular-row .campo {
+    flex: 1; /* Hace que todos crezcan proporcionalmente */
+    min-width: 0; /* Evita que los inputs desborden el contenedor */
+    margin-bottom: 0; /* Quita márgenes que puedan romper la línea */
+}
+
+/* Ajustes específicos de anchos para que se vea equilibrado */
+.titular-row .campo:nth-child(1) { flex: 2; } /* Nombre más ancho */
+.titular-row .campo:nth-child(2) { flex: 1.5; } /* Tipo */
+.titular-row .campo:nth-child(3) { flex: 0.6; } /* % más estrecho */
+.titular-row .campo:nth-child(4) { flex: 1.2; } /* Fecha Nac. */
+
+/* El botón de borrar (X) */
+.btn-borrar {
+    flex: 0 0 auto;
+    height: 42px; /* Misma altura que los inputs */
+    margin-bottom: 0;
+}
