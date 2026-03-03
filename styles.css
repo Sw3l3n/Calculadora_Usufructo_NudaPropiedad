@@ -1,89 +1,126 @@
-/* --- ESTILOS GENERALES --- */
-body {
-    background-color: #f8fafc;
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    color: #1e293b;
-    padding: 20px;
-    margin: 0;
+:root {
+    --bg-color: #f8fafc;
+    --card-bg: #ffffff;
+    --text-color: #1e293b;
+    --border-color: #e2e8f0;
+    --accent-color: #1e40af;
 }
 
-.contenedor { max-width: 850px; margin: auto; }
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    margin: 0;
+    padding: 20px;
+}
+
+.contenedor {
+    max-width: 900px;
+    margin: 0 auto;
+}
 
 .tarjeta {
-    background: white;
-    padding: 30px;
-    border-radius: 16px;
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-    margin-bottom: 25px;
-    border: 1px solid #e2e8f0;
-}
-
-/* --- NAVEGACIÓN --- */
-.nav-menu { display: flex; justify-content: center; gap: 12px; margin-bottom: 25px; }
-.nav-menu button {
-    background: #e2e8f0;
-    color: #475569;
-    padding: 10px 24px;
-    border-radius: 99px;
-    cursor: pointer;
-    font-weight: 600;
-    border: none;
-    transition: 0.2s;
-}
-.nav-menu button.activo { background: #1e293b; color: white; }
-
-/* --- FORMULARIOS --- */
-h1 { font-size: 24px; color: #0f172a; text-align: center; margin-bottom: 25px; }
-h2 { font-size: 18px; color: #334155; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 20px; }
-
-.fila-inputs { display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; align-items: flex-end; }
-.campo { flex: 1; min-width: 140px; }
-label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #64748b; text-transform: uppercase; }
-input, select { 
-    width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; 
-    font-size: 14px; box-sizing: border-box; background: #fff;
-}
-input:focus { border-color: #3b82f6; outline: none; ring: 2px rgba(59,130,246,0.1); }
-
-/* --- BOTONES --- */
-.botones { display: flex; gap: 12px; margin-top: 25px; }
-.btn-calcular { background: #10b981; color: white; flex: 2; padding: 14px; border-radius: 8px; font-weight: 700; border: none; cursor: pointer; }
-.btn-añadir { background: #3b82f6; color: white; flex: 1; padding: 14px; border-radius: 8px; font-weight: 700; border: none; cursor: pointer; }
-.btn-borrar { background: #fee2e2; color: #ef4444; width: 40px; height: 40px; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-
-/* --- SECCIÓN RESULTADOS MEJORADA --- */
-.bloque-resumen-azul {
-    background: #eff6ff;
-    padding: 20px;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
     border-radius: 12px;
-    border: 1px solid #bfdbfe;
+    padding: 30px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     margin-bottom: 20px;
 }
-.resumen-linea-1 { color: #1e40af; font-size: 16px; font-weight: 800; margin-bottom: 8px; }
-.resumen-linea-2 { color: #3b82f6; font-size: 13px; font-weight: 600; display: flex; gap: 20px; }
 
-.informe-contenedor { position: relative; }
-.informe-caja {
-    background: #1e293b;
-    color: #f8fafc;
-    padding: 25px;
-    font-family: 'Consolas', 'Monaco', monospace;
-    white-space: pre-wrap;
-    line-height: 1.6;
-    border-radius: 12px;
+.nav-menu {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.nav-menu button {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    background: var(--border-color);
+    color: var(--text-color);
+}
+
+.nav-menu button.activo {
+    background: var(--accent-color);
+    color: white;
+}
+
+.fila-inputs {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    align-items: flex-end;
+}
+
+.campo { display: flex; flex-direction: column; gap: 8px; }
+label { font-size: 13px; font-weight: 700; text-transform: uppercase; color: #64748b; }
+
+input, select {
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--card-bg);
+    color: var(--text-color);
+    font-size: 16px;
+}
+
+.btn-calcular {
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    padding: 15px 25px;
+    border-radius: 8px;
+    font-weight: 800;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+
+.btn-añadir { background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+.btn-borrar { background: #ef4444; color: white; border: none; width: 40px; height: 40px; border-radius: 8px; cursor: pointer; }
+
+/* Nueva visualización de resultados */
+.bloque-resumen-azul {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.resumen-linea-1 { color: #1e40af; font-size: 18px; font-weight: 800; margin-bottom: 5px; }
+.resumen-linea-2 { color: #3b82f6; font-size: 14px; font-weight: 600; }
+
+.resultado-titular {
+    border-bottom: 1px solid var(--border-color);
+    padding: 15px 0;
+}
+
+.resultado-titular:last-child { border-bottom: none; }
+
+.nombre-titular {
+    font-weight: 800;
+    color: var(--accent-color);
+    font-size: 16px;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.detalle-item {
     font-size: 14px;
-    border: 1px solid #334155;
-}
-.btn-copiar {
-    position: absolute; top: 10px; right: 10px;
-    background: rgba(255,255,255,0.1); color: #fff;
-    padding: 6px 12px; border-radius: 6px; font-size: 11px;
-    border: 1px solid rgba(255,255,255,0.2); cursor: pointer;
+    color: #475569;
+    margin-left: 10px;
 }
 
-.hidden { display: none; }
+.total-titular {
+    font-weight: 700;
+    font-size: 17px;
+    color: var(--text-color);
+    margin-top: 8px;
+}
 
-/* Estilos Plusvalía Excel */
-.excel-box { border: 2px solid #1e293b; border-radius: 8px; overflow: hidden; margin-bottom: 15px; background: white; }
-.excel-header { background: #f1f5f9; padding: 10px; font-weight: 800; border-bottom: 1px solid #1e293b; font-size: 12px; text-align: center; }
-.excel-value { padding: 20px; font-size: 28px; font-weight: 800; color: #dc2626; text-align: center; }
+.hidden { display: none !important; }
