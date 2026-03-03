@@ -2,17 +2,19 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>MarBlau - Usufructo y Nuda Propiedad</title>
+    <title>MarBlau - Gestión Usufructos</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body onload="iniciarApp()">
 
+    <button class="theme-switch" onclick="document.body.classList.toggle('dark-mode')">🌓</button>
+
     <div id="login-box" class="contenedor" style="margin-top: 100px;">
         <div class="tarjeta" style="text-align: center;">
-            <img src="logo.jpeg" alt="MarBlau" style="max-width: 200px; margin-bottom: 20px;">
-            <p style="color: #64748b; font-weight: 600; margin-bottom: 20px;">Acceso Privado</p>
-            <input type="password" id="pass_input" style="text-align: center; max-width: 300px; margin-bottom: 15px;" placeholder="Contraseña">
-            <button class="btn-calcular" style="display: block; margin: auto; max-width: 300px;" onclick="comprobarPass()">ENTRAR</button>
+            <img src="logom.png" alt="MarBlau" style="max-width: 180px; margin-bottom: 20px;">
+            <p style="font-weight: 700; color: #64748b; margin-bottom: 20px;">SISTEMA DE CÁLCULO PRIVADO</p>
+            <input type="password" id="pass_input" style="text-align: center; width: 100%; max-width: 300px; margin-bottom: 15px;" placeholder="Contraseña">
+            <button class="btn-calcular" style="display: block; margin: auto; width: 100%; max-width: 300px;" onclick="comprobarPass()">Entrar</button>
         </div>
     </div>
 
@@ -25,36 +27,36 @@
         </div>
 
         <div class="tarjeta">
-            <div style="text-align: center; margin-bottom: 20px;"><img src="logo.jpeg" style="max-width: 100px;"></div>
-            <h1>Cálculo de Usufructo y Nuda Propiedad</h1>
+            <div style="text-align: center; margin-bottom: 20px;"><img src="logom.png" style="max-width: 100px;"></div>
+            <h1 style="text-align: center; margin-bottom: 30px;">Cálculo de Usufructo y Nuda Propiedad</h1>
             
-            <div class="fila-inputs" style="margin-bottom: 30px; display: flex; gap: 15px;">
+            <div class="fila-inputs">
                 <div class="campo" style="flex: 2;">
-                    <label>Valor propiedad (€)</label>
-                    <input type="number" id="valor_propiedad" placeholder="Ej: 200000" style="font-size: 18px; font-weight: bold;">
+                    <label>Valor total propiedad (€)</label>
+                    <input type="number" id="valor_propiedad" placeholder="Ej: 200000" style="font-weight: 800; font-size: 20px;">
                 </div>
                 <div class="campo" style="flex: 1;">
-                    <label>Fecha de transmisión</label>
-                    <input type="date" id="fecha_venta" style="font-size: 18px; font-weight: bold;">
+                    <label>Fecha transmisión</label>
+                    <input type="date" id="fecha_venta">
                 </div>
             </div>
 
-            <h2>Titulares y Derechos</h2>
+            <h2 style="font-size: 16px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px;">Titulares y Derechos</h2>
             <div id="contenedor-titulares"></div>
             
-            <div class="botones">
+            <div style="margin-top: 25px; display: flex; gap: 15px;">
                 <button class="btn-añadir" onclick="agregarTitular()">+ Añadir Titular</button>
-                <button class="btn-calcular" onclick="generarInforme()">GENERAR INFORME DE REPARTO</button>
+                <button class="btn-calcular" onclick="generarInforme()" style="flex-grow: 1;">Generar Informe de Reparto</button>
             </div>
         </div>
 
         <div id="seccion-informe" class="tarjeta hidden">
-            <h2>Resultado del Cálculo</h2>
+            <h2 style="margin-top: 0; font-size: 18px;">Informe de Resultados</h2>
             
-            <div id="metadatos-azul" class="bloque-resumen-azul" style="text-align: center;"></div>
+            <div id="metadatos-azul" class="bloque-resumen-azul"></div>
             
-            <div class="informe-contenedor" style="position: relative;">
-                <button class="btn-copiar" style="position: absolute; top: 10px; right: 10px;" onclick="copiarInforme()">Copiar Texto</button>
+            <div class="informe-contenedor">
+                <button class="btn-copiar" onclick="copiarInforme()">Copiar Texto</button>
                 <div class="informe-caja" id="informe-texto"></div>
             </div>
         </div>
@@ -64,24 +66,21 @@
         const CLAVE = "pagame";
 
         function iniciarApp() {
-            // Establecer fecha de venta a hoy por defecto
             document.getElementById('fecha_venta').valueAsDate = new Date();
-            verificarAcceso();
+            if(sessionStorage.getItem('sesion_marblau') === 'ok') verificarAcceso();
         }
 
-        function comprobarPass() { 
-            if(document.getElementById('pass_input').value === CLAVE) { 
-                sessionStorage.setItem('sesion_marblau', 'ok'); 
-                verificarAcceso(); 
-            } else {
-                alert("Contraseña incorrecta");
-            }
+        function comprobarPass() {
+            if(document.getElementById('pass_input').value === CLAVE) {
+                sessionStorage.setItem('sesion_marblau', 'ok');
+                verificarAcceso();
+            } else { alert("Acceso denegado"); }
         }
 
-        function verificarAcceso() { 
+        function verificarAcceso() {
             if(sessionStorage.getItem('sesion_marblau') === 'ok') {
-                document.getElementById('login-box').classList.add('hidden'); 
-                document.getElementById('contenido-privado').classList.remove('hidden'); 
+                document.getElementById('login-box').classList.add('hidden');
+                document.getElementById('contenido-privado').classList.remove('hidden');
             }
         }
 
@@ -89,16 +88,10 @@
 
         function agregarTitular() {
             const div = document.createElement('div');
-            // Usamos una clase específica para las filas de datos
-            div.className = 'titular-row fila-inputs'; 
-            div.style.display = 'flex';
-            div.style.gap = '10px';
-            div.style.marginBottom = '10px';
-            div.style.alignItems = 'flex-end';
-
+            div.className = 'titular-row fila-inputs';
             div.innerHTML = `
                 <div class="campo" style="flex:2.5;"><label>Nombre</label><input type="text" class="t-nombre" placeholder="Nombre completo"></div>
-                <div class="campo" style="flex:1.5;"><label>Tipo de propiedad</label>
+                <div class="campo" style="flex:1.5;"><label>Tipo</label>
                     <select class="t-tipo" onchange="this.parentElement.parentElement.querySelector('.t-fecha').disabled=(this.value!=='usufructo')">
                         <option value="pleno">Pleno dominio</option>
                         <option value="nuda">Nuda propiedad</option>
@@ -107,7 +100,7 @@
                 </div>
                 <div class="campo" style="flex:0.6;"><label>%</label><input type="number" class="t-pct" value="100"></div>
                 <div class="campo" style="flex:1.2;"><label>Fecha Nac.</label><input type="date" class="t-fecha" disabled></div>
-                <button class="btn-borrar" onclick="this.parentElement.remove()" style="margin-bottom:5px;">×</button>
+                <button class="btn-borrar" onclick="this.parentElement.remove()">×</button>
             `;
             document.getElementById('contenedor-titulares').appendChild(div);
         }
@@ -117,85 +110,79 @@
             const fechaVentaStr = document.getElementById('fecha_venta').value;
             const filas = document.querySelectorAll('.titular-row');
             
-            if(!valorTotal || !fechaVentaStr || filas.length === 0) {
-                alert("Faltan datos: Valor, Fecha de venta o Titulares.");
-                return;
-            }
+            if(!valorTotal || !fechaVentaStr || filas.length === 0) return alert("Faltan datos");
 
-            const fechaReferencia = new Date(fechaVentaStr);
+            const fechaRef = new Date(fechaVentaStr);
             let edadMenor = 999;
+            let tieneUsufructo = false;
 
-            // 1. Calcular edad del menor respecto a Fecha de Venta
+            // Buscamos si hay algún usufructuario para los cálculos
             filas.forEach(f => {
-                const tipo = f.querySelector('.t-tipo').value;
-                const fNacStr = f.querySelector('.t-fecha').value;
-                if(tipo === 'usufructo' && fNacStr) {
-                    let fNac = new Date(fNacStr);
-                    let edad = fechaReferencia.getFullYear() - fNac.getFullYear();
-                    const m = fechaReferencia.getMonth() - fNac.getMonth();
-                    if (m < 0 || (m === 0 && fechaReferencia.getDate() < fNac.getDate())) edad--;
+                if(f.querySelector('.t-tipo').value === 'usufructo' && f.querySelector('.t-fecha').value) {
+                    tieneUsufructo = true;
+                    let fNac = new Date(f.querySelector('.t-fecha').value);
+                    let edad = fechaRef.getFullYear() - fNac.getFullYear();
+                    if (fechaRef.getMonth() < fNac.getMonth() || (fechaRef.getMonth() === fNac.getMonth() && fechaRef.getDate() < fNac.getDate())) edad--;
                     if(edad < edadMenor) edadMenor = edad;
                 }
             });
 
-            const uPct = edadMenor === 999 ? 0 : Math.max(10, Math.min(70, 89 - edadMenor));
+            const uPct = tieneUsufructo ? Math.max(10, Math.min(70, 89 - edadMenor)) : 0;
             const nPct = 100 - uPct;
             
-            let sumaU_pct = 0, sumaN_pct = 0, sumaP_pct = 0; 
-            let totalU_eur = 0, totalN_eur = 0, totalP_eur = 0, granTotal = 0; 
+            // Lógica de OCULTAR lo del usufructo si no aplica (Como en la foto)
+            const cajaAzul = document.getElementById('metadatos-azul');
+            if(!tieneUsufructo) {
+                cajaAzul.classList.add('hidden');
+            } else {
+                cajaAzul.classList.remove('hidden');
+                cajaAzul.innerHTML = `
+                    <div class="resumen-linea-1">Edad del menor: ${edadMenor} años | Coef. Usufructo: ${uPct}%</div>
+                    <div class="resumen-linea-2">Coef. Nuda Propiedad: ${nPct}%</div>
+                `;
+            }
+
+            let sumaU_pct = 0, sumaN_pct = 0, sumaP_pct = 0;
             let propietarios = {};
 
-            // 2. Procesar cálculos individuales
             filas.forEach(f => {
                 let nombre = (f.querySelector('.t-nombre').value || "Titular").trim();
-                let nombreKey = nombre.toUpperCase();
                 let tipo = f.querySelector('.t-tipo').value;
-                let pct = parseFloat(f.querySelector('.t-pct').value) || 0;
-                
-                let valor = 0, tipoTxt = "";
+                let pctInmueble = parseFloat(f.querySelector('.t-pct').value) || 0;
+                let valorCalculado = 0;
+                let tipoTxt = "";
 
                 if(tipo === 'usufructo') { 
-                    valor = (valorTotal * (pct/100)) * (uPct/100); 
+                    valorCalculado = (valorTotal * (pctInmueble/100)) * (uPct/100); 
                     tipoTxt = "Usufructo vitalicio"; 
-                    sumaU_pct += pct; totalU_eur += valor;
+                    sumaU_pct += pctInmueble;
                 } else if(tipo === 'nuda') { 
-                    valor = (valorTotal * (pct/100)) * (nPct/100); 
+                    valorCalculado = (valorTotal * (pctInmueble/100)) * (nPct/100); 
                     tipoTxt = "Nuda propiedad"; 
-                    sumaN_pct += pct; totalN_eur += valor;
+                    sumaN_pct += pctInmueble;
                 } else { 
-                    valor = valorTotal * (pct/100); 
+                    valorCalculado = valorTotal * (pctInmueble/100); 
                     tipoTxt = "Pleno dominio"; 
-                    sumaP_pct += pct; totalP_eur += valor;
+                    sumaP_pct += pctInmueble;
                 }
 
-                if(!propietarios[nombreKey]) {
-                    propietarios[nombreKey] = { real: nombre, items: [], total: 0 };
-                }
-                propietarios[nombreKey].items.push(`${tipoTxt} (${pct}%): ${valor.toLocaleString('es-ES', {minimumFractionDigits:2})} €`);
-                propietarios[nombreKey].total += valor;
-                granTotal += valor;
+                if(!propietarios[nombre]) propietarios[nombre] = { items: [], total: 0 };
+                propietarios[nombre].items.push(`- ${tipoTxt} (${pctInmueble}%): ${valorCalculado.toLocaleString('es-ES', {minimumFractionDigits:2})} €`);
+                propietarios[nombre].total += valorCalculado;
             });
 
-            // 3. Renderizar caja azul
-            document.getElementById('metadatos-azul').innerHTML = `
-                <div class="resumen-linea-1">Edad del menor: ${edadMenor === 999 ? 'N/A' : edadMenor + ' años'}, Usufructo: ${uPct}%</div>
-                <div class="resumen-linea-2" style="font-size: 14px; margin-top: 5px;">
-                    Usufructo: ${sumaU_pct}% | Nuda propiedad: ${sumaN_pct}% | Pleno dominio: ${sumaP_pct}%
-                </div>
-            `;
-
-            // 4. Renderizar texto plano
-            let txt = `Edad usufructuario para el calculo: ${edadMenor === 999 ? 'N/A' : edadMenor} años, usufructo ${uPct}%\n\n`;
-            for(let key in propietarios) {
-                let p = propietarios[key];
-                txt += `Propietario: ${p.real}\n`;
-                p.items.forEach(i => txt += `${i}\n`);
-                txt += `Total para ${key}: ${p.total.toLocaleString('es-ES', {minimumFractionDigits:2})} €\n\n`;
+            // Texto para copiar (Limpio de N/A si no hay usufructo)
+            let txt = "";
+            if(tieneUsufructo) {
+                txt += `CÁLCULO BASADO EN USUFRUCTO (${uPct}%)\nEdad usufructuario: ${edadMenor} años\n`;
+                txt += `------------------------------------------\n\n`;
             }
-            if(totalU_eur > 0) txt += `Usufructo: ${totalU_eur.toLocaleString('es-ES', {minimumFractionDigits:2})} €\n`;
-            if(totalN_eur > 0) txt += `Nuda propiedad: ${totalN_eur.toLocaleString('es-ES', {minimumFractionDigits:2})} €\n`;
-            if(totalP_eur > 0) txt += `Pleno dominio: ${totalP_eur.toLocaleString('es-ES', {minimumFractionDigits:2})} €\n`;
-            txt += `Total repartido: ${granTotal.toLocaleString('es-ES', {minimumFractionDigits:2})} €`;
+
+            for(let p in propietarios) {
+                txt += `TITULAR: ${p}\n`;
+                propietarios[p].items.forEach(i => txt += `${i}\n`);
+                txt += `TOTAL PARA ${p.toUpperCase()}: ${propietarios[p].total.toLocaleString('es-ES', {minimumFractionDigits:2})} €\n\n`;
+            }
 
             document.getElementById('seccion-informe').classList.remove('hidden');
             document.getElementById('informe-texto').innerText = txt;
@@ -203,11 +190,10 @@
 
         function copiarInforme() {
             navigator.clipboard.writeText(document.getElementById('informe-texto').innerText);
-            alert("Copiado");
+            alert("Copiado al portapapeles");
         }
-        
+
         agregarTitular();
     </script>
 </body>
 </html>
-
