@@ -1,26 +1,42 @@
+/* --- VARIABLES DE MARBLAU --- */
 :root {
-    --bg-color: #f8fafc;
+    --bg-color: #f1f5f9;
     --card-bg: #ffffff;
     --text-color: #1e293b;
     --border-color: #e2e8f0;
     --accent-color: #1e40af; /* Azul MarBlau */
-    --resumen-bg: #eff6ff;
-    --resumen-border: #bfdbfe;
+    --accent-hover: #1e3a8a;
+    --success-color: #10b981;
+    --error-bg: #fee2e2;
+    --error-text: #ef4444;
+    
+    /* Colores para bloques de resultados */
+    --meta-bg: #eff6ff;
+    --meta-border: #bfdbfe;
+    --dark-box-bg: #1e293b;
+    --dark-box-text: #f1f5f9;
 }
+
+/* --- RESET & BASE --- */
+* { box-sizing: border-box; }
 
 body {
     background-color: var(--bg-color);
     color: var(--text-color);
-    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     margin: 0;
     padding: 20px;
+    line-height: 1.5;
 }
 
 .contenedor {
-    max-width: 800px;
+    max-width: 900px;
     margin: 0 auto;
 }
 
+.hidden { display: none !important; }
+
+/* --- TARJETAS --- */
 .tarjeta {
     background-color: var(--card-bg);
     border: 1px solid var(--border-color);
@@ -30,10 +46,12 @@ body {
     margin-bottom: 20px;
 }
 
+/* --- NAVEGACIÓN --- */
 .nav-menu {
     display: flex;
     gap: 10px;
     margin-bottom: 20px;
+    justify-content: flex-start;
 }
 
 .nav-menu button {
@@ -42,8 +60,9 @@ body {
     border: none;
     cursor: pointer;
     font-weight: 600;
-    background: var(--border-color);
-    color: var(--text-color);
+    background: #e2e8f0;
+    color: #475569;
+    transition: all 0.2s;
 }
 
 .nav-menu button.activo {
@@ -51,24 +70,59 @@ body {
     color: white;
 }
 
+.nav-menu button:hover:not(.activo) {
+    background: #cbd5e1;
+}
+
+/* --- FORMULARIOS --- */
+h1 {
+    font-size: 24px;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 25px;
+    color: var(--text-color);
+}
+
 .fila-inputs {
     display: flex;
     gap: 15px;
     margin-bottom: 20px;
+    align-items: flex-end;
+    flex-wrap: wrap;
 }
 
-.campo { display: flex; flex-direction: column; gap: 8px; flex: 1; }
-label { font-size: 13px; font-weight: 700; text-transform: uppercase; color: #64748b; }
+.campo {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-width: 200px;
+}
 
-input {
+label {
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #64748b;
+    letter-spacing: 0.5px;
+}
+
+input, select {
     padding: 12px;
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    background: var(--card-bg);
-    color: var(--text-color);
     font-size: 16px;
+    width: 100%;
+    color: var(--text-color);
 }
 
+input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+}
+
+/* --- BOTONES --- */
 .btn-calcular {
     background: var(--accent-color);
     color: white;
@@ -79,31 +133,82 @@ input {
     cursor: pointer;
     text-transform: uppercase;
     width: 100%;
+    margin-top: 10px;
+    transition: background 0.2s;
 }
 
-/* Diseño de resultados Plusvalía */
+.btn-calcular:hover {
+    background: var(--accent-hover);
+}
+
+.btn-añadir {
+    background: #f1f5f9;
+    border: 1px solid var(--border-color);
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.btn-borrar {
+    background: var(--error-bg);
+    color: var(--error-text);
+    border: none;
+    width: 40px;
+    height: 42px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* --- SECCIÓN DE RESULTADOS --- */
+
+/* Bloque Azul (Resumen rápido) */
 .bloque-resumen-azul {
-    background: var(--resumen-bg);
-    border: 1px solid var(--resumen-border);
+    background: var(--meta-bg);
+    border: 1px solid var(--meta-border);
     border-radius: 10px;
     padding: 15px;
     margin-bottom: 20px;
     text-align: center;
-    color: #1e40af;
+    color: var(--accent-color);
     font-weight: 700;
 }
 
-.resultado-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+/* Caja Oscura tipo Consola (Para copiar) */
+.excel-box {
+    background: var(--dark-box-bg);
+    color: var(--dark-box-text);
+    padding: 25px;
+    border-radius: 10px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Titulares con diseño de lista (Si se prefiere visual) */
+.resultado-titular {
     padding: 15px 0;
     border-bottom: 1px solid var(--border-color);
 }
 
-.resultado-item:last-child { border-bottom: none; }
+.nombre-titular {
+    color: var(--accent-color);
+    font-weight: 800;
+    font-size: 16px;
+    display: block;
+}
 
-.res-etiqueta { font-weight: 600; color: #64748b; }
-.res-valor { font-weight: 800; color: var(--accent-color); font-size: 18px; }
+.total-titular {
+    font-weight: 700;
+    font-size: 18px;
+    margin-top: 5px;
+}
 
-.hidden { display: none !important; }
+/* --- RESPONSIVE --- */
+@media (max-width: 600px) {
+    .fila-inputs { flex-direction: column; }
+    .campo { width: 100%; }
+}
