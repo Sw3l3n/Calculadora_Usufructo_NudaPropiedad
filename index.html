@@ -2,20 +2,37 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Calculadora de Usufructo y Nuda Propiedad</title>
+    <title>MarBlau - Usufructo y Nuda propiedad</title>
     <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body onload="verificarAcceso()">
 
-<div class="contenedor">
+<div id="login-box" class="contenedor" style="margin-top: 100px;">
+    <div class="tarjeta" style="text-align: center;">
+        <h1>MarBlau</h1>
+        <p class="descripcion">Introduce tu clave de acceso</p>
+        <input type="password" id="pass_input" style="text-align: center; max-width: 250px; margin-bottom: 15px;" placeholder="Contraseña">
+        <br>
+        <button class="btn-calcular" style="max-width: 250px;" onclick="comprobarPass()">ENTRAR</button>
+        <p id="error-pass" class="error hidden">Contraseña incorrecta</p>
+    </div>
+</div>
+
+<div id="contenido-privado" class="contenedor hidden">
+    
+    <div class="tarjeta" style="padding: 10px; text-align: center; margin-bottom: 15px;">
+        <button class="btn-añadir" style="background: #2c3e50; color: white;">Usufructo</button>
+        <button class="btn-añadir" onclick="location.href='plusvalia.html'">Plusvalía</button>
+        <button class="btn-borrar" onclick="cerrarSesion()" style="margin-left: 20px;">Cerrar Sesión</button>
+    </div>
+
     <div class="tarjeta">
-        <h1>Cálculo de usufructo y nuda propiedad</h1>
-        <p class="descripcion">MarBlau</p>
-        
+        <h1>Cálculo de Usufructo y Nuda Propiedad</h1>
+        <p class="descripcion">Todos los campos son obligatorios para un cálculo exacto.</p>
         <div class="fila-inputs">
             <div class="campo">
-                <label>Precio total de venta (€)</label>
-                <input type="number" id="precio" placeholder="Ej: 200000">
+                <label>Precio de venta total (€)</label>
+                <input type="number" id="precio" placeholder="0.00">
             </div>
             <div class="campo">
                 <label>Fecha de la venta</label>
@@ -25,7 +42,7 @@
     </div>
 
     <div class="tarjeta">
-        <h2>Reparto de inmueble</h2>
+        <h2>Titulares y Derechos</h2>
         <div id="lista-personas">
             <div class="persona-input">
                 <input type="text" class="nombre" placeholder="Nombre">
@@ -34,44 +51,54 @@
                     <option value="usufructo">Usufructo</option>
                     <option value="nuda">Nuda propiedad</option>
                 </select>
-                <input type="date" class="fnac" title="Fecha de nacimiento" style="display:none;">
-                <input type="number" class="pct" placeholder="%">
-                <button class="btn-borrar" onclick="eliminarPersona(this)">×</button>
+                <input type="date" class="fnac" style="display:none;" title="Fecha Nacimiento">
+                <input type="number" class="pct" placeholder="% de participación">
+                <button class="btn-borrar" onclick="this.parentElement.remove()">×</button>
             </div>
         </div>
-        
         <div class="botones">
-            <button class="btn-añadir" onclick="añadirPersona()">+ Añadir persona</button>
-            <button class="btn-calcular" onclick="calcular()">CALCULAR TODO</button>
+            <button class="btn-añadir" onclick="añadirPersona()">+ Añadir Titular</button>
+            <button class="btn-calcular" onclick="calcular()">CALCULAR REPARTO</button>
         </div>
     </div>
 
     <div id="resultado" class="tarjeta hidden">
-        <h2>Reparto final del dinero</h2>
-        
+        <h2>Informe de Reparto</h2>
         <div class="bloque-resumen">
-            <div class="dato-info">Edad usada: <span id="res-edad">--</span> años</div>
-            <div class="dato-info">Usufructo: <span id="res-pct-u">--</span>%</div>
-            <div class="dato-info">Nuda Propiedad: <span id="res-pct-np">--</span>%</div>
+            <div class="dato-info">Edad del menor: <span id="res-edad">--</span> años</div>
+            <div class="dato-info">Coef. Usufructo: <span id="res-pct-u">--</span>%</div>
+            <div class="dato-info">Coef. Nuda: <span id="res-pct-np">--</span>%</div>
         </div>
-
-        <div id="reparto-detallado" class="reparto-lista"></div>
-        
-        <div id="mensaje-error" class="error hidden">Los porcentajes no suman 100%. Revisa los datos.</div>
+        <div id="reparto-detallado"></div>
+        <div id="mensaje-error" class="error hidden" style="margin-top:20px;"></div>
     </div>
 </div>
 
 <script>
-function gestionarFecha(el) {
-    const inputFecha = el.parentElement.querySelector('.fnac');
-    inputFecha.style.display = (el.value === 'usufructo') ? 'block' : 'none';
+const CLAVE = "marblau2026"; 
+
+function comprobarPass() {
+    if(document.getElementById('pass_input').value === CLAVE) {
+        sessionStorage.setItem('sesion_activa', 'si');
+        verificarAcceso();
+    } else { document.getElementById('error-pass').classList.remove('hidden'); }
 }
+
+function verificarAcceso() {
+    if(sessionStorage.getItem('sesion_activa') === 'si') {
+        document.getElementById('login-box').classList.add('hidden');
+        document.getElementById('contenido-privado').classList.remove('hidden');
+    }
+}
+
+function cerrarSesion() { sessionStorage.clear(); location.reload(); }
+
+function gestionarFecha(el) { el.parentElement.querySelector('.fnac').style.display = (el.value === 'usufructo') ? 'block' : 'none'; }
 
 function añadirPersona() {
     const div = document.createElement('div');
     div.className = 'persona-input';
-    div.innerHTML = `
-        <input type="text" class="nombre" placeholder="Nombre">
+    div.innerHTML = `<input type="text" class="nombre" placeholder="Nombre">
         <select class="tipo" onchange="gestionarFecha(this)">
             <option value="pleno">Pleno dominio</option>
             <option value="usufructo">Usufructo</option>
@@ -79,69 +106,113 @@ function añadirPersona() {
         </select>
         <input type="date" class="fnac" style="display:none;">
         <input type="number" class="pct" placeholder="%">
-        <button class="btn-borrar" onclick="eliminarPersona(this)">×</button>
-    `;
+        <button class="btn-borrar" onclick="this.parentElement.remove()">×</button>`;
     document.getElementById('lista-personas').appendChild(div);
 }
 
-function eliminarPersona(boton) {
-    boton.parentElement.remove();
-}
-
 function calcular() {
-    const precio = parseFloat(document.getElementById('precio').value) || 0;
-    const fVenta = new Date(document.getElementById('f_venta').value);
+    const precio = parseFloat(document.getElementById('precio').value);
+    const fVentaStr = document.getElementById('f_venta').value;
     const bloques = document.querySelectorAll('.persona-input');
+    const errDiv = document.getElementById('mensaje-error');
     
-    let edadMenor = 999;
-    let sumaU = 0, sumaNP = 0, sumaP = 0;
+    // 1. VALIDACIONES BÁSICAS
+    if (!precio || !fVentaStr) {
+        alert("Falta el precio o la fecha de venta.");
+        return;
+    }
+
+    let sumaPleno = 0;
+    let sumaUsufructo = 0;
+    let sumaNuda = 0;
+    let hayUsufructoSinFecha = false;
 
     bloques.forEach(b => {
         const tipo = b.querySelector('.tipo').value;
-        const nacimiento = new Date(b.querySelector('.fnac').value);
-        const p = parseFloat(b.querySelector('.pct').value) || 0;
+        const pct = parseFloat(b.querySelector('.pct').value) || 0;
+        const fnac = b.querySelector('.fnac').value;
 
-        if (tipo === 'usufructo' && !isNaN(nacimiento) && !isNaN(fVenta)) {
-            let edad = fVenta.getFullYear() - nacimiento.getFullYear();
-            if (fVenta.getMonth() < nacimiento.getMonth() || (fVenta.getMonth() === nacimiento.getMonth() && fVenta.getDate() < nacimiento.getDate())) {
-                edad--;
-            }
-            if (edad < edadMenor) edadMenor = edad;
+        if (tipo === 'pleno') sumaPleno += pct;
+        if (tipo === 'usufructo') { 
+            sumaUsufructo += pct;
+            if (!fnac) hayUsufructoSinFecha = true;
         }
-        if (tipo === 'pleno') sumaP += p;
-        if (tipo === 'usufructo') sumaU += p;
-        if (tipo === 'nuda') sumaNP += p;
+        if (tipo === 'nuda') sumaNuda += pct;
+    });
+
+    if (hayUsufructoSinFecha) {
+        alert("Debes indicar la fecha de nacimiento de los usufructuarios.");
+        return;
+    }
+
+    // Validación de porcentajes: La suma de Pleno + Usufructo debe ser 100% 
+    // Y la suma de Pleno + Nuda debe ser 100%
+    if (Math.round(sumaPleno + sumaUsufructo) !== 100 || Math.round(sumaPleno + sumaNuda) !== 100) {
+        errDiv.innerText = `Error: Los porcentajes no cuadran. (Pleno+Usufructo: ${sumaPleno + sumaUsufructo}%) (Pleno+Nuda: ${sumaPleno + sumaNuda}%)`;
+        errDiv.classList.remove('hidden');
+        document.getElementById('resultado').classList.add('hidden');
+        return;
+    } else {
+        errDiv.classList.add('hidden');
+    }
+
+    // 2. CÁLCULO DE EDAD Y COEFICIENTES
+    const fVenta = new Date(fVentaStr);
+    let edadMenor = 999;
+
+    bloques.forEach(b => {
+        const t = b.querySelector('.tipo').value;
+        const n = new Date(b.querySelector('.fnac').value);
+        if (t === 'usufructo' && !isNaN(n)) {
+            let e = fVenta.getFullYear() - n.getFullYear();
+            if (fVenta.getMonth() < n.getMonth() || (fVenta.getMonth() === n.getMonth() && fVenta.getDate() < n.getDate())) e--;
+            if (e < edadMenor) edadMenor = e;
+        }
     });
 
     if (edadMenor === 999) edadMenor = 0;
-    let uLegal = Math.max(10, Math.min(70, 89 - edadMenor));
-    let npLegal = 100 - uLegal;
+    let uL = Math.max(10, Math.min(70, 89 - edadMenor));
+    let npL = 100 - uL;
 
+    // 3. GENERAR RESULTADO DETALLADO
     document.getElementById('resultado').classList.remove('hidden');
-    document.getElementById('res-edad').innerText = edadMenor;
-    document.getElementById('res-pct-u').innerText = uLegal;
-    document.getElementById('res-pct-np').innerText = npLegal;
+    document.getElementById('res-edad').innerText = (edadMenor === 0) ? "N/A" : edadMenor;
+    document.getElementById('res-pct-u').innerText = uL;
+    document.getElementById('res-pct-np').innerText = npL;
 
-    let html = "";
+    let html = `<div class="fila-dinero" style="background:#eee; font-weight:bold;">
+                    <span>Nombre y Concepto</span>
+                    <span>% Titularidad</span>
+                    <span>Euros a Percibir</span>
+                </div>`;
+                
     bloques.forEach(b => {
-        const nombre = b.querySelector('.nombre').value || "Titular";
-        const tipo = b.querySelector('.tipo').value;
+        const nom = b.querySelector('.nombre').value || "Sin nombre";
+        const t = b.querySelector('.tipo').value;
         const p = parseFloat(b.querySelector('.pct').value) || 0;
-        let final = 0;
-
-        if (tipo === 'pleno') final = precio * (p / 100);
-        else if (tipo === 'usufructo') final = (precio * (uLegal / 100)) * (p / 100);
-        else final = (precio * (npLegal / 100)) * (p / 100);
+        
+        let eur = 0;
+        let concepto = "";
+        
+        if (t === 'pleno') {
+            eur = precio * (p / 100);
+            concepto = "Pleno Dominio";
+        } else if (t === 'usufructo') {
+            eur = (precio * (uL / 100)) * (p / 100);
+            concepto = "Usufructo";
+        } else {
+            eur = (precio * (npL / 100)) * (p / 100);
+            concepto = "Nuda Propiedad";
+        }
 
         html += `<div class="fila-dinero">
-            <span>${nombre} (${tipo})</span>
-            <strong>${final.toLocaleString('es-ES', {minimumFractionDigits:2})} €</strong>
-        </div>`;
+                    <span><strong>${nom}</strong><br><small>${concepto}</small></span>
+                    <span>${p}%</span>
+                    <strong style="color:#2c3e50;">${eur.toLocaleString('es-ES', {minimumFractionDigits:2})} €</strong>
+                </div>`;
     });
+    
     document.getElementById('reparto-detallado').innerHTML = html;
-
-    const cuadra = (Math.round(sumaP + sumaU) === 100 && Math.round(sumaP + sumaNP) === 100);
-    document.getElementById('mensaje-error').classList.toggle('hidden', cuadra);
 }
 </script>
 </body>
