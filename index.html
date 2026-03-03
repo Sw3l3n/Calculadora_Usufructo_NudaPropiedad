@@ -17,7 +17,6 @@
     </div>
 
     <div id="contenido-privado" class="contenedor hidden">
-        
         <div class="nav-menu">
             <button class="activo">Usufructo</button>
             <button onclick="location.href='plusvalia.html'">Plusvalía</button>
@@ -26,7 +25,7 @@
 
         <div class="tarjeta">
             <div style="text-align: center; margin-bottom: 20px;"><img src="logom.png" style="max-width: 100px;"></div>
-            <h1 style="text-align: center; margin-bottom: 30px;">Cálculo de Usufructo y Nuda Propiedad</h1>
+            <h1 style="text-align: center; margin-bottom: 30px;">Cálculo de Reparto</h1>
             
             <div class="fila-inputs">
                 <div class="campo" style="flex: 2;">
@@ -39,24 +38,22 @@
                 </div>
             </div>
 
-            <h2 style="font-size: 16px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">Titulares y Derechos</h2>
+            <h2 style="font-size: 14px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; color: #64748b;">TITULARES Y DERECHOS</h2>
             <div id="contenedor-titulares"></div>
             
             <div style="margin-top: 25px; display: flex; gap: 15px;">
                 <button class="btn-añadir" onclick="agregarTitular()">+ Añadir Titular</button>
-                <button class="btn-calcular" onclick="generarInforme()" style="flex-grow: 1;">Generar Informe de Reparto</button>
+                <button class="btn-calcular" onclick="generarInforme()" style="flex-grow: 1;">Calcular Reparto</button>
             </div>
         </div>
 
         <div id="seccion-informe" class="tarjeta hidden">
-            <h2 style="margin-top: 0; font-size: 18px;">Informe de Resultados</h2>
+            <h2 style="margin-top: 0; font-size: 18px; color: var(--accent-color); border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">Desglose de la Operación</h2>
             
             <div id="metadatos-azul" class="bloque-resumen-azul"></div>
             
-            <div class="informe-contenedor">
-                <button class="btn-copiar" onclick="copiarInforme()">Copiar Texto</button>
-                <div class="informe-caja" id="informe-texto"></div>
-            </div>
+            <div id="resultados-lista">
+                </div>
         </div>
     </div>
 
@@ -88,7 +85,7 @@
             const div = document.createElement('div');
             div.className = 'titular-row fila-inputs';
             div.innerHTML = `
-                <div class="campo" style="flex:2.5;"><label>Nombre</label><input type="text" class="t-nombre" placeholder="Nombre completo"></div>
+                <div class="campo" style="flex:2.5;"><label>Nombre</label><input type="text" class="t-nombre" placeholder="Ej: Juan Pérez"></div>
                 <div class="campo" style="flex:1.5;"><label>Tipo</label>
                     <select class="t-tipo" onchange="this.parentElement.parentElement.querySelector('.t-fecha').disabled=(this.value!=='usufructo')">
                         <option value="pleno">Pleno dominio</option>
@@ -133,12 +130,14 @@
             } else {
                 cajaAzul.classList.remove('hidden');
                 cajaAzul.innerHTML = `
-                    <div class="resumen-linea-1">Edad del menor: ${edadMenor} años | Coef. Usufructo: ${uPct}%</div>
-                    <div class="resumen-linea-2">Coef. Nuda Propiedad: ${nPct}%</div>
+                    <div class="resumen-linea-1">Coeficiente Usufructo: ${uPct}% (Edad: ${edadMenor} años)</div>
+                    <div class="resumen-linea-2">Coeficiente Nuda Propiedad: ${nPct}%</div>
                 `;
             }
 
+            let htmlResultados = "";
             let propietarios = {};
+
             filas.forEach(f => {
                 let nombre = (f.querySelector('.t-nombre').value || "Titular").trim();
                 let tipo = f.querySelector('.t-tipo').value;
@@ -158,29 +157,24 @@
                 }
 
                 if(!propietarios[nombre]) propietarios[nombre] = { items: [], total: 0 };
-                propietarios[nombre].items.push(`- ${tipoTxt} (${pctInmueble}%): ${valorCalculado.toLocaleString('es-ES', {minimumFractionDigits:2})} €`);
+                propietarios[nombre].items.push({txt: tipoTxt, pct: pctInmueble, val: valorCalculado});
                 propietarios[nombre].total += valorCalculado;
             });
 
-            let txt = "";
-            if(tieneUsufructo) {
-                txt += `CÁLCULO BASADO EN USUFRUCTO (${uPct}%)\nEdad usufructuario: ${edadMenor} años\n`;
-                txt += `------------------------------------------\n\n`;
-            }
-
             for(let p in propietarios) {
-                txt += `TITULAR: ${p}\n`;
-                propietarios[p].items.forEach(i => txt += `${i}\n`);
-                txt += `TOTAL PARA ${p.toUpperCase()}: ${propietarios[p].total.toLocaleString('es-ES', {minimumFractionDigits:2})} €\n\n`;
+                htmlResultados += `
+                    <div class="resultado-titular">
+                        <span class="nombre-titular">${p.toUpperCase()}</span>
+                        ${propietarios[p].items.map(i => `
+                            <div class="detalle-item">• ${i.txt} (${i.pct}%): <strong>${i.val.toLocaleString('es-ES', {minimumFractionDigits:2})} €</strong></div>
+                        `).join('')}
+                        <div class="total-titular">Total: ${propietarios[p].total.toLocaleString('es-ES', {minimumFractionDigits:2})} €</div>
+                    </div>
+                `;
             }
 
             document.getElementById('seccion-informe').classList.remove('hidden');
-            document.getElementById('informe-texto').innerText = txt;
-        }
-
-        function copiarInforme() {
-            navigator.clipboard.writeText(document.getElementById('informe-texto').innerText);
-            alert("Copiado al portapapeles");
+            document.getElementById('resultados-lista').innerHTML = htmlResultados;
         }
 
         agregarTitular();
