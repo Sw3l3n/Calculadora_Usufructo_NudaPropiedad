@@ -4,6 +4,38 @@
     <meta charset="UTF-8">
     <title>MarBlau - Cálculo de Reparto</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Ajustes extra para que se vea impecable */
+        .resumen-propietario {
+            border-left: 4px solid #3b82f6;
+            padding-left: 15px;
+            margin-bottom: 25px;
+        }
+        .label-propietario {
+            font-size: 13px;
+            font-weight: 800;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        .linea-derecho {
+            font-size: 15px;
+            margin: 4px 0;
+            color: #1e293b;
+        }
+        .total-persona {
+            font-weight: 700;
+            color: #0f172a;
+            margin-top: 8px;
+            font-size: 16px;
+        }
+        .separador-resumen {
+            border: 0;
+            border-top: 2px dashed #e2e8f0;
+            margin: 25px 0;
+        }
+    </style>
 </head>
 <body onload="iniciarApp()">
 
@@ -47,8 +79,8 @@
         </div>
 
         <div id="res-reparto" class="tarjeta hidden">
-            <button class="btn-copiar-usuf" onclick="copiarUsufructo()">Copiar Resultados</button>
-            <div id="meta-usuf" class="bloque-resumen-azul">Cálculo realizado según fecha de transmisión.</div>
+            <button class="btn-copiar-usuf" style="margin-bottom: 20px;" onclick="copiarUsufructo()">Copiar Resultados</button>
+            <div id="meta-usuf" class="bloque-resumen-azul" style="margin-bottom: 20px;">Cálculo realizado según fecha de transmisión.</div>
             <div id="lista-resultados-usuf"></div>
         </div>
     </div>
@@ -142,8 +174,8 @@
 
             const filas = Array.from(document.querySelectorAll('.titular-row'));
             
-            // 1. CALCULAR VALOR USUFRUCTO (u)
-            let uGlobal = 0;
+            // 1. Obtener el coeficiente de usufructo (89 - edad)
+            let uGlobal = 10; 
             const usufRow = filas.find(r => r.querySelector('.t-tipo').value === 'us');
             if (usufRow) {
                 const fNac = new Date(usufRow.querySelector('.t-fecha').value);
@@ -156,12 +188,12 @@
                 }
             }
 
-            // 2. PROCESAR REPARTO
+            // 2. Agrupar por persona
             const usuarios = {};
             let totalPD = 0, totalUS = 0, totalNP = 0;
 
             filas.forEach(row => {
-                const nombre = (row.querySelector('.t-nombre').value || "Titular").trim().toUpperCase();
+                const nombre = (row.querySelector('.t-nombre').value || "Titular").trim();
                 const tipo = row.querySelector('.t-tipo').value;
                 const pctOriginal = parseFloat(row.querySelector('.t-pct').value);
                 const pct = pctOriginal / 100;
@@ -174,7 +206,7 @@
                     totalPD += valorFila;
                 } else if (tipo === 'us') {
                     valorFila = (valorTotal * (uGlobal/100)) * pct;
-                    etiqueta = `Usufructo vitalicio (${pctOriginal}%)`;
+                    etiqueta = `Usufructo (${pctOriginal}%)`;
                     totalUS += valorFila;
                 } else {
                     valorFila = (valorTotal * (1 - uGlobal/100)) * pct;
@@ -187,28 +219,28 @@
                 usuarios[nombre].total += valorFila;
             });
 
-            // 3. GENERAR HTML Y TEXTO
+            // 3. Mostrar resultados
             let html = "";
             let txtCopiar = "INFORME DE REPARTO - MARBLAU\n\n";
 
             for (const nombre in usuarios) {
-                html += `<div class="resultado-titular" style="margin-bottom:20px;">
-                            <div class="plus-label" style="color:#64748b;">Propietario: ${nombre}</div>`;
+                html += `<div class="resumen-propietario">
+                            <div class="label-propietario">Propietario: ${nombre}</div>`;
                 txtCopiar += `Propietario: ${nombre}\n`;
                 
                 usuarios[nombre].lineas.forEach(l => {
-                    html += `<div style="font-size:14px; margin:3px 0;">${l.txt}: <b>${l.val.toLocaleString('es-ES',{minimumFractionDigits:2})} €</b></div>`;
+                    html += `<div class="linea-derecho">${l.txt}: <b>${l.val.toLocaleString('es-ES',{minimumFractionDigits:2})} €</b></div>`;
                     txtCopiar += `${l.txt}: ${l.val.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n`;
                 });
 
-                html += `<div class="total-titular" style="border-top:1px solid #eee; padding-top:5px; margin-top:5px;">Total para ${nombre}: ${usuarios[nombre].total.toLocaleString('es-ES',{minimumFractionDigits:2})} €</div>
+                html += `<div class="total-persona">Total para ${nombre}: ${usuarios[nombre].total.toLocaleString('es-ES',{minimumFractionDigits:2})} €</div>
                          </div>`;
                 txtCopiar += `Total para ${nombre}: ${usuarios[nombre].total.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n\n`;
             }
 
-            // Resumen Final
+            // Bloque final de cuadre
             const totalRepartido = totalPD + totalUS + totalNP;
-            html += `<hr style="border:0; border-top:2px dashed #e2e8f0; margin:20px 0;">
+            html += `<hr class="separador-resumen">
                      <div class="bloque-oscuro-plusvalia">
                         ${totalUS > 0 ? `<div class="plus-label">Usufructo: ${totalUS.toLocaleString('es-ES',{minimumFractionDigits:2})} €</div>` : ''}
                         ${totalNP > 0 ? `<div class="plus-label">Nuda Propiedad: ${totalNP.toLocaleString('es-ES',{minimumFractionDigits:2})} €</div>` : ''}
@@ -227,7 +259,7 @@
 
         function copiarUsufructo() {
             navigator.clipboard.writeText(document.getElementById('meta-usuf').dataset.copy);
-            alert("Copiado al portapapeles correctamente");
+            alert("✅ Copiado al portapapeles");
         }
     </script>
 </body>
