@@ -163,7 +163,7 @@
             document.getElementById('info-azul').innerText = `Edad usufructuario: ${edadUsuf > 0 ? edadUsuf : 'N/A'} años, usufructo ${uCoefLegal}%`;
             document.getElementById('info-detallada-pct').innerText = `Cuotas: PD: ${sumPd}% | US: ${sumUs}% | NP: ${sumNp}%`;
 
-            let h = "", c = `CÁLCULOS REPARTO\n\n`;
+            let h = "", c = `REPARTO\n\n`;
             for (const n in usuarios) {
                 h += `<div class="resumen-propietario" style="page-break-inside: avoid;"><div class="label-propietario">Propietario: ${n}</div>`;
                 usuarios[n].lineas.forEach(l => {
@@ -242,3 +242,4 @@
     </script>
 </body>
 </html>
+
