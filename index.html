@@ -216,7 +216,6 @@
             const usuarios = {};
             let pctTotalUsuf = 0;
             let pctTotalNuda = 0;
-            let pctTotalPD = 0;
 
             filas.forEach(row => {
                 const nombre = (row.querySelector('.t-nombre').value || "Titular").trim().toUpperCase();
@@ -229,7 +228,6 @@
                 if (tipo === 'pd') {
                     valorEuros = valorTotal * (pctFila / 100);
                     etiqueta = `Pleno dominio (${pctFila}%)`;
-                    pctTotalPD += pctFila;
                 } else if (tipo === 'us') {
                     valorEuros = (valorTotal * (uCoefLegal / 100)) * (pctFila / 100);
                     etiqueta = `Usufructo (${pctFila}%)`;
@@ -245,13 +243,12 @@
                 usuarios[nombre].total += valorEuros;
             });
 
-            // CABECERA AZUL - Solo porcentajes repartidos en negrita
+            // CABECERA AZUL - Solo Usufructo y Nuda Propiedad
             const headerHtml = `
                 <div>Edad usufructuario para el cálculo: ${edadUsufMasJoven} años</div>
                 <div style="margin-top:5px;">
                     Usufructo <b>${pctTotalUsuf}%</b> &nbsp;|&nbsp; 
-                    Nuda propiedad <b>${pctTotalNuda}%</b> &nbsp;|&nbsp; 
-                    Pleno dominio <b>${pctTotalPD}%</b>
+                    Nuda propiedad <b>${pctTotalNuda}%</b>
                 </div>
             `;
             document.getElementById('info-header-calculo').innerHTML = headerHtml;
@@ -259,7 +256,7 @@
             // CUERPO COPIA
             let txtCopiar = `CÁLCULOS REPARTO - MARBLAU\n`;
             txtCopiar += `Edad ref: ${edadUsufMasJoven} años\n`;
-            txtCopiar += `Usufructo: ${pctTotalUsuf}% | Nuda propiedad: ${pctTotalNuda}% | Pleno dominio: ${pctTotalPD}%\n`;
+            txtCopiar += `Usufructo: ${pctTotalUsuf}% | Nuda propiedad: ${pctTotalNuda}%\n`;
             txtCopiar += `--------------------------\n\n`;
 
             let html = "";
@@ -287,7 +284,7 @@
             const texto = document.getElementById('texto-para-copiar').innerText;
             if (!texto) return alert("No hay resultados");
             navigator.clipboard.writeText(texto).then(() => {
-                alert("✅ Copiado al portapapeles");
+                alert("Copiado al portapapeles");
             });
         }
     </script>
