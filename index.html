@@ -212,11 +212,10 @@
                     if(uCoefLegal < 10) uCoefLegal = 10;
                     if(uCoefLegal > 70) uCoefLegal = 70;
                 }
-            } else {
-                uCoefLegal = 0; // Si no hay usufructo
             }
 
             const usuarios = {};
+            let pctTotalPropUsuf = 0; // Suma de % de propiedad con derecho de usufructo
             let eurosTotalUsuf = 0;
             let eurosTotalNuda = 0;
             let eurosTotalPD = 0;
@@ -238,6 +237,7 @@
                     valorEuros = (valorTotal * (uCoefLegal / 100)) * (pctFila / 100);
                     etiqueta = `Usufructo (${pctFila}%)`;
                     eurosTotalUsuf += valorEuros;
+                    pctTotalPropUsuf += pctFila; // Sumamos el % de propiedad que tiene este usufructo
                 } else {
                     valorEuros = (valorTotal * (1 - uCoefLegal / 100)) * (pctFila / 100);
                     etiqueta = `Nuda propiedad (${pctFila}%)`;
@@ -249,9 +249,9 @@
                 usuarios[nombre].total += valorEuros;
             });
 
-            // CORRECCIÓN INFO AZUL: (Edad y Coeficiente de cálculo)
+            // INFO AZUL: Edad y suma de % de usufructos
             let edadRef = edadUsufMasJoven > 0 ? edadUsufMasJoven : "N/A";
-            const textoCabecera = `Edad usufructuario para el calculo: ${edadRef} años, usufructo ${uCoefLegal}%`;
+            const textoCabecera = `Edad usufructuario para el calculo: ${edadRef} años, usufructo ${pctTotalPropUsuf}%`;
             
             document.getElementById('info-header-calculo').innerText = textoCabecera;
 
@@ -272,7 +272,7 @@
                 txtCopiar += `Total para ${nombre.toUpperCase()}: ${usuarios[nombre].total.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n\n`;
             }
 
-            // MANTENEMOS EL BLOQUE VERDE DE TOTALES AL FINAL
+            // Bloque final de totales
             let totalesHtml = `<div class="resumen-propietario" style="border-left-color: #10b981; background: #ecfdf5;">`;
             if(eurosTotalPD > 0) {
                 txtCopiar += `Pleno dominio: ${eurosTotalPD.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n`;
@@ -301,7 +301,7 @@
             const texto = document.getElementById('texto-para-copiar').innerText;
             if (!texto) return alert("No hay resultados");
             navigator.clipboard.writeText(texto).then(() => {
-                alert("✅ Copiado al portapapeles");
+                alert("Copiado al portapapeles");
             });
         }
     </script>
