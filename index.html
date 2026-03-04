@@ -21,7 +21,7 @@
         }
         .linea-derecho {
             font-size: 15px;
-            margin: 3px 0;
+            margin: 4px 0;
             color: #1e293b;
         }
         .total-persona {
@@ -40,7 +40,7 @@
             margin-bottom: 25px;
             border: 1px solid #bfdbfe;
             font-size: 14px;
-            font-weight: 600;
+            line-height: 1.6;
         }
         .titulo-seccion-res {
             font-size: 18px;
@@ -191,11 +191,11 @@
 
             const filas = Array.from(document.querySelectorAll('.titular-row'));
             
+            // 1. Obtener edad del usufructuario más joven para el coeficiente legal
             let edadUsufMasJoven = 0;
-            let uCoef = 10; 
+            let uCoefLegal = 10; 
 
             const usufructuarios = filas.filter(r => r.querySelector('.t-tipo').value === 'us');
-            
             if (usufructuarios.length > 0) {
                 let fechaNacMasReciente = null;
                 usufructuarios.forEach(r => {
@@ -208,44 +208,66 @@
                 if (fechaNacMasReciente) {
                     edadUsufMasJoven = fechaTrans.getFullYear() - fechaNacMasReciente.getFullYear();
                     if (fechaTrans < new Date(fechaTrans.getFullYear(), fechaNacMasReciente.getMonth(), fechaNacMasReciente.getDate())) edadUsufMasJoven--;
-                    uCoef = 89 - edadUsufMasJoven;
-                    if(uCoef < 10) uCoef = 10;
-                    if(uCoef > 70) uCoef = 70;
+                    uCoefLegal = 89 - edadUsufMasJoven;
+                    if(uCoefLegal < 10) uCoefLegal = 10;
+                    if(uCoefLegal > 70) uCoefLegal = 70;
                 }
             }
 
+            // 2. Procesar datos por persona y acumular totales
             const usuarios = {};
+            let pctTotalUsuf = 0;
+            let pctTotalNuda = 0;
+            let eurosTotalUsuf = 0;
+            let eurosTotalNuda = 0;
+
             filas.forEach(row => {
                 const nombre = (row.querySelector('.t-nombre').value || "Titular").trim().toUpperCase();
                 const tipo = row.querySelector('.t-tipo').value;
-                const pctOriginal = parseFloat(row.querySelector('.t-pct').value);
-                const pct = pctOriginal / 100;
-                let valorFila = 0;
+                const pctFila = parseFloat(row.querySelector('.t-pct').value) || 0;
+                
+                let valorEuros = 0;
                 let etiqueta = "";
 
                 if (tipo === 'pd') {
-                    valorFila = valorTotal * pct;
-                    etiqueta = `Pleno dominio (${pctOriginal}%)`;
+                    valorEuros = valorTotal * (pctFila / 100);
+                    etiqueta = `Pleno dominio (${pctFila}%)`;
                 } else if (tipo === 'us') {
-                    valorFila = (valorTotal * (uCoef/100)) * pct;
-                    etiqueta = `Usufructo (${pctOriginal}%)`;
+                    // Valor = (Valor Total * Coeficiente Legal %) * % de titularidad del usufructo
+                    valorEuros = (valorTotal * (uCoefLegal / 100)) * (pctFila / 100);
+                    etiqueta = `Usufructo (${pctFila}%)`;
+                    pctTotalUsuf += pctFila;
+                    eurosTotalUsuf += valorEuros;
                 } else {
-                    valorFila = (valorTotal * (1 - uCoef/100)) * pct;
-                    etiqueta = `Nuda propiedad (${pctOriginal}%)`;
+                    // Valor = (Valor Total * (100 - Coeficiente Legal) %) * % de titularidad de nuda propiedad
+                    valorEuros = (valorTotal * (1 - uCoefLegal / 100)) * (pctFila / 100);
+                    etiqueta = `Nuda propiedad (${pctFila}%)`;
+                    pctTotalNuda += pctFila;
+                    eurosTotalNuda += valorEuros;
                 }
 
                 if (!usuarios[nombre]) usuarios[nombre] = { lineas: [], total: 0 };
-                usuarios[nombre].lineas.push({ txt: etiqueta, val: valorFila });
-                usuarios[nombre].total += valorFila;
+                usuarios[nombre].lineas.push({ txt: etiqueta, val: valorEuros });
+                usuarios[nombre].total += valorEuros;
             });
 
-            // CABECERA 
-            const headerText = `Edad usufructuario para el cálculo: ${edadUsufMasJoven} años, usufructo ${uCoef}%`;
-            document.getElementById('info-header-calculo').innerText = headerText;
+            // CABECERA AZUL - Refleja los % sumados de la tabla
+            const headerHtml = `
+                <div>Edad usufructuario para el cálculo: <b>${edadUsufMasJoven} años</b></div>
+                <div style="margin-top:5px;">
+                    Usufructo (${pctTotalUsuf}%): <b>${eurosTotalUsuf.toLocaleString('es-ES',{minimumFractionDigits:2})} €</b> &nbsp;|&nbsp; 
+                    Nuda propiedad (${pctTotalNuda}%): <b>${eurosTotalNuda.toLocaleString('es-ES',{minimumFractionDigits:2})} €</b>
+                </div>
+            `;
+            document.getElementById('info-header-calculo').innerHTML = headerHtml;
 
-            // CUERPO RESULTADOS
+            // CUERPO RESULTADOS Y COPIA
             let html = "";
-            let txtCopiar = `CÁLCULOS REPARTO - MARBLAU\n${headerText}\nNuda propiedad: ${100-uCoef}%\n--------------------------\n\n`;
+            let txtCopiar = `CÁLCULOS REPARTO - MARBLAU\n`;
+            txtCopiar += `Edad ref: ${edadUsufMasJoven} años\n`;
+            txtCopiar += `Usufructo (${pctTotalUsuf}%): ${eurosTotalUsuf.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n`;
+            txtCopiar += `Nuda propiedad (${pctTotalNuda}%): ${eurosTotalNuda.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n`;
+            txtCopiar += `--------------------------\n\n`;
 
             for (const nombre in usuarios) {
                 html += `<div class="resumen-propietario">
@@ -271,7 +293,7 @@
             const texto = document.getElementById('texto-para-copiar').innerText;
             if (!texto) return alert("No hay resultados");
             navigator.clipboard.writeText(texto).then(() => {
-                alert("✅ Copiado al portapapeles");
+                alert("Copiado al portapapeles");
             });
         }
     </script>
