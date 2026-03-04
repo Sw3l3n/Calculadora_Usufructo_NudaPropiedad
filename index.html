@@ -5,23 +5,23 @@
     <title>MarBlau - Cálculo de Reparto</title>
     <link rel="stylesheet" href="styles.css">
     <style>
-        /* Ajustes extra para que se vea impecable */
         .resumen-propietario {
             border-left: 4px solid #3b82f6;
-            padding-left: 15px;
-            margin-bottom: 25px;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            background: #f8fafc;
+            border-radius: 0 8px 8px 0;
         }
         .label-propietario {
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 800;
-            color: #64748b;
+            color: #475569;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
         }
         .linea-derecho {
             font-size: 15px;
-            margin: 4px 0;
+            margin: 3px 0;
             color: #1e293b;
         }
         .total-persona {
@@ -29,11 +29,18 @@
             color: #0f172a;
             margin-top: 8px;
             font-size: 16px;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 5px;
         }
-        .separador-resumen {
-            border: 0;
-            border-top: 2px dashed #e2e8f0;
-            margin: 25px 0;
+        .info-calculo-azul {
+            background: #eff6ff;
+            color: #1e40af;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border: 1px solid #bfdbfe;
+            font-size: 14px;
+            line-height: 1.6;
         }
     </style>
 </head>
@@ -80,7 +87,7 @@
 
         <div id="res-reparto" class="tarjeta hidden">
             <button class="btn-copiar-usuf" style="margin-bottom: 20px;" onclick="copiarUsufructo()">Copiar Resultados</button>
-            <div id="meta-usuf" class="bloque-resumen-azul" style="margin-bottom: 20px;">Cálculo realizado según fecha de transmisión.</div>
+            <div id="info-header-calculo" class="info-calculo-azul"></div>
             <div id="lista-resultados-usuf"></div>
         </div>
     </div>
@@ -174,26 +181,24 @@
 
             const filas = Array.from(document.querySelectorAll('.titular-row'));
             
-            // 1. Obtener el coeficiente de usufructo (89 - edad)
-            let uGlobal = 10; 
+            let edadUsuf = 0;
+            let uCoef = 0;
             const usufRow = filas.find(r => r.querySelector('.t-tipo').value === 'us');
+            
             if (usufRow) {
                 const fNac = new Date(usufRow.querySelector('.t-fecha').value);
                 if (!isNaN(fNac)) {
-                    let edad = fechaTrans.getFullYear() - fNac.getFullYear();
-                    if (fechaTrans < new Date(fechaTrans.getFullYear(), fNac.getMonth(), fNac.getDate())) edad--;
-                    uGlobal = 89 - edad;
-                    if(uGlobal < 10) uGlobal = 10;
-                    if(uGlobal > 70) uGlobal = 70;
+                    edadUsuf = fechaTrans.getFullYear() - fNac.getFullYear();
+                    if (fechaTrans < new Date(fechaTrans.getFullYear(), fNac.getMonth(), fNac.getDate())) edadUsuf--;
+                    uCoef = 89 - edadUsuf;
+                    if(uCoef < 10) uCoef = 10;
+                    if(uCoef > 70) uCoef = 70;
                 }
             }
 
-            // 2. Agrupar por persona
             const usuarios = {};
-            let totalPD = 0, totalUS = 0, totalNP = 0;
-
             filas.forEach(row => {
-                const nombre = (row.querySelector('.t-nombre').value || "Titular").trim();
+                const nombre = (row.querySelector('.t-nombre').value || "Titular").trim().toUpperCase();
                 const tipo = row.querySelector('.t-tipo').value;
                 const pctOriginal = parseFloat(row.querySelector('.t-pct').value);
                 const pct = pctOriginal / 100;
@@ -203,15 +208,12 @@
                 if (tipo === 'pd') {
                     valorFila = valorTotal * pct;
                     etiqueta = `Pleno dominio (${pctOriginal}%)`;
-                    totalPD += valorFila;
                 } else if (tipo === 'us') {
-                    valorFila = (valorTotal * (uGlobal/100)) * pct;
+                    valorFila = (valorTotal * (uCoef/100)) * pct;
                     etiqueta = `Usufructo (${pctOriginal}%)`;
-                    totalUS += valorFila;
                 } else {
-                    valorFila = (valorTotal * (1 - uGlobal/100)) * pct;
+                    valorFila = (valorTotal * (1 - uCoef/100)) * pct;
                     etiqueta = `Nuda propiedad (${pctOriginal}%)`;
-                    totalNP += valorFila;
                 }
 
                 if (!usuarios[nombre]) usuarios[nombre] = { lineas: [], total: 0 };
@@ -219,9 +221,18 @@
                 usuarios[nombre].total += valorFila;
             });
 
-            // 3. Mostrar resultados
+            // CABECERA AZUL
+            const headerHtml = `
+                <div><b>Edad usufructuario para el cálculo:</b> ${edadUsuf > 0 ? edadUsuf + ' años' : 'No definido'}</div>
+                <div style="margin-top:5px; font-weight:700;">
+                    Usufructo: ${uCoef}% &nbsp;&nbsp; Nuda propiedad: ${100 - uCoef}% &nbsp;&nbsp; Pleno dominio: 100%
+                </div>
+            `;
+            document.getElementById('info-header-calculo').innerHTML = headerHtml;
+
+            // CUERPO RESULTADOS
             let html = "";
-            let txtCopiar = "CÁLCULO REPARTO\n\n";
+            let txtCopiar = `INFORME MARBLAU\nEdad usufructuario: ${edadUsuf} años\nUsufructo: ${uCoef}% | Nuda propiedad: ${100-uCoef}%\n--------------------------\n`;
 
             for (const nombre in usuarios) {
                 html += `<div class="resumen-propietario">
@@ -238,20 +249,6 @@
                 txtCopiar += `Total para ${nombre}: ${usuarios[nombre].total.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n\n`;
             }
 
-            // Bloque final de cuadre
-            const totalRepartido = totalPD + totalUS + totalNP;
-            html += `<hr class="separador-resumen">
-                     <div class="bloque-oscuro-plusvalia">
-                        ${totalUS > 0 ? `<div class="plus-label">Usufructo: ${totalUS.toLocaleString('es-ES',{minimumFractionDigits:2})} €</div>` : ''}
-                        ${totalNP > 0 ? `<div class="plus-label">Nuda Propiedad: ${totalNP.toLocaleString('es-ES',{minimumFractionDigits:2})} €</div>` : ''}
-                        ${totalPD > 0 ? `<div class="plus-label">Pleno Dominio: ${totalPD.toLocaleString('es-ES',{minimumFractionDigits:2})} €</div>` : ''}
-                        <div class="plus-value" style="margin-top:10px; border-top:1px solid rgba(255,255,255,0.2); padding-top:10px;">Total repartido: ${totalRepartido.toLocaleString('es-ES',{minimumFractionDigits:2})} €</div>
-                     </div>`;
-
-            txtCopiar += `Usufructo: ${totalUS.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n`;
-            txtCopiar += `Nuda propiedad: ${totalNP.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n`;
-            txtCopiar += `Total repartido: ${totalRepartido.toLocaleString('es-ES',{minimumFractionDigits:2})} €`;
-
             document.getElementById('res-reparto').classList.remove('hidden');
             document.getElementById('lista-resultados-usuf').innerHTML = html;
             document.getElementById('meta-usuf').dataset.copy = txtCopiar;
@@ -264,4 +261,3 @@
     </script>
 </body>
 </html>
-
