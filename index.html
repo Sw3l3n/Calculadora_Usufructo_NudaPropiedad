@@ -191,7 +191,6 @@
 
             const filas = Array.from(document.querySelectorAll('.titular-row'));
             
-            // 1. Obtener edad del usufructuario más joven para el coeficiente legal
             let edadUsufMasJoven = 0;
             let uCoefLegal = 10; 
 
@@ -214,12 +213,10 @@
                 }
             }
 
-            // 2. Procesar datos por persona y acumular totales
             const usuarios = {};
             let pctTotalUsuf = 0;
             let pctTotalNuda = 0;
-            let eurosTotalUsuf = 0;
-            let eurosTotalNuda = 0;
+            let pctTotalPD = 0;
 
             filas.forEach(row => {
                 const nombre = (row.querySelector('.t-nombre').value || "Titular").trim().toUpperCase();
@@ -232,18 +229,15 @@
                 if (tipo === 'pd') {
                     valorEuros = valorTotal * (pctFila / 100);
                     etiqueta = `Pleno dominio (${pctFila}%)`;
+                    pctTotalPD += pctFila;
                 } else if (tipo === 'us') {
-                    // Valor = (Valor Total * Coeficiente Legal %) * % de titularidad del usufructo
                     valorEuros = (valorTotal * (uCoefLegal / 100)) * (pctFila / 100);
                     etiqueta = `Usufructo (${pctFila}%)`;
                     pctTotalUsuf += pctFila;
-                    eurosTotalUsuf += valorEuros;
                 } else {
-                    // Valor = (Valor Total * (100 - Coeficiente Legal) %) * % de titularidad de nuda propiedad
                     valorEuros = (valorTotal * (1 - uCoefLegal / 100)) * (pctFila / 100);
                     etiqueta = `Nuda propiedad (${pctFila}%)`;
                     pctTotalNuda += pctFila;
-                    eurosTotalNuda += valorEuros;
                 }
 
                 if (!usuarios[nombre]) usuarios[nombre] = { lineas: [], total: 0 };
@@ -251,24 +245,24 @@
                 usuarios[nombre].total += valorEuros;
             });
 
-            // CABECERA AZUL - Refleja los % sumados de la tabla
+            // CABECERA AZUL - Solo porcentajes repartidos en negrita
             const headerHtml = `
-                <div>Edad usufructuario para el cálculo: <b>${edadUsufMasJoven} años</b></div>
+                <div>Edad usufructuario para el cálculo: ${edadUsufMasJoven} años</div>
                 <div style="margin-top:5px;">
-                    Usufructo (${pctTotalUsuf}%): <b>${eurosTotalUsuf.toLocaleString('es-ES',{minimumFractionDigits:2})} €</b> &nbsp;|&nbsp; 
-                    Nuda propiedad (${pctTotalNuda}%): <b>${eurosTotalNuda.toLocaleString('es-ES',{minimumFractionDigits:2})} €</b>
+                    Usufructo <b>${pctTotalUsuf}%</b> &nbsp;|&nbsp; 
+                    Nuda propiedad <b>${pctTotalNuda}%</b> &nbsp;|&nbsp; 
+                    Pleno dominio <b>${pctTotalPD}%</b>
                 </div>
             `;
             document.getElementById('info-header-calculo').innerHTML = headerHtml;
 
-            // CUERPO RESULTADOS Y COPIA
-            let html = "";
+            // CUERPO COPIA
             let txtCopiar = `CÁLCULOS REPARTO - MARBLAU\n`;
             txtCopiar += `Edad ref: ${edadUsufMasJoven} años\n`;
-            txtCopiar += `Usufructo (${pctTotalUsuf}%): ${eurosTotalUsuf.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n`;
-            txtCopiar += `Nuda propiedad (${pctTotalNuda}%): ${eurosTotalNuda.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n`;
+            txtCopiar += `Usufructo: ${pctTotalUsuf}% | Nuda propiedad: ${pctTotalNuda}% | Pleno dominio: ${pctTotalPD}%\n`;
             txtCopiar += `--------------------------\n\n`;
 
+            let html = "";
             for (const nombre in usuarios) {
                 html += `<div class="resumen-propietario">
                             <div class="label-propietario">Propietario: ${nombre}</div>`;
@@ -293,7 +287,7 @@
             const texto = document.getElementById('texto-para-copiar').innerText;
             if (!texto) return alert("No hay resultados");
             navigator.clipboard.writeText(texto).then(() => {
-                alert("Copiado al portapapeles");
+                alert("✅ Copiado al portapapeles");
             });
         }
     </script>
