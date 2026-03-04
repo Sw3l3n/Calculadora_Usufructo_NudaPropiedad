@@ -216,9 +216,6 @@
             const usuarios = {};
             let pctTotalUsuf = 0;
             let pctTotalNuda = 0;
-            let eurosTotalUsuf = 0;
-            let eurosTotalNuda = 0;
-            let eurosTotalPD = 0;
 
             filas.forEach(row => {
                 const nombreRaw = row.querySelector('.t-nombre').value || "Titular";
@@ -232,17 +229,14 @@
                 if (tipo === 'pd') {
                     valorEuros = valorTotal * (pctFila / 100);
                     etiqueta = `Pleno dominio (${pctFila}%)`;
-                    eurosTotalPD += valorEuros;
                 } else if (tipo === 'us') {
                     valorEuros = (valorTotal * (uCoefLegal / 100)) * (pctFila / 100);
                     etiqueta = `Usufructo (${pctFila}%)`;
                     pctTotalUsuf += pctFila;
-                    eurosTotalUsuf += valorEuros;
                 } else {
                     valorEuros = (valorTotal * (1 - uCoefLegal / 100)) * (pctFila / 100);
                     etiqueta = `Nuda propiedad (${pctFila}%)`;
                     pctTotalNuda += pctFila;
-                    eurosTotalNuda += valorEuros;
                 }
 
                 if (!usuarios[nombre]) usuarios[nombre] = { lineas: [], total: 0 };
@@ -260,38 +254,39 @@
             `;
             document.getElementById('info-header-calculo').innerHTML = headerHtml;
 
-            // GENERACIÓN DE TEXTO PARA COPIAR (ESTILO SOLICITADO)
-            let txtCopiar = `--- CÁLCULOS REPARTO ---\n\n`;
-            txtCopiar += `Edad usufructuario para el calculo: ${edadUsufMasJoven} años, usufructo ${pctTotalUsuf}%\n\n`;
+            // GENERACIÓN DE TEXTO PARA COPIAR (CLON EXACTO DE LA WEB)
+            let txtCopiar = `CÁLCULOS REPARTO\n\n`;
+            txtCopiar += `Edad usufructuario para el cálculo: ${edadUsufMasJoven} años\n`;
+            txtCopiar += `Usufructo ${pctTotalUsuf}% | Nuda propiedad ${pctTotalNuda}%\n\n`;
 
             let html = "";
             for (const nombre in usuarios) {
+                // Generar HTML
                 html += `<div class="resumen-propietario">
                             <div class="label-propietario">Propietario: ${nombre}</div>`;
                 
+                // Generar Texto Copiar
                 txtCopiar += `Propietario: ${nombre}\n`;
                 
                 usuarios[nombre].lineas.forEach(l => {
+                    // Generar HTML
                     html += `<div class="linea-derecho">${l.txt}: <b>${l.val.toLocaleString('es-ES',{minimumFractionDigits:2})} €</b></div>`;
+                    
+                    // Generar Texto Copiar
                     txtCopiar += `${l.txt}: ${l.val.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n`;
                 });
 
-                html += `<div class="total-persona">Total para ${nombre.toUpperCase()}: ${usuarios[nombre].total.toLocaleString('es-ES',{minimumFractionDigits:2})} €</div>
+                // Generar HTML
+                html += `<div class="total-persona">Total para ${nombre}: ${usuarios[nombre].total.toLocaleString('es-ES',{minimumFractionDigits:2})} €</div>
                          </div>`;
-                txtCopiar += `Total para ${nombre.toUpperCase()}: ${usuarios[nombre].total.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n\n`;
+                         
+                // Generar Texto Copiar
+                txtCopiar += `Total para ${nombre}: ${usuarios[nombre].total.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n\n`;
             }
-
-            // Resumen final del copy
-            if(eurosTotalPD > 0) txtCopiar += `Pleno dominio: ${eurosTotalPD.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n`;
-            if(eurosTotalUsuf > 0) txtCopiar += `Usufructo: ${eurosTotalUsuf.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n`;
-            if(eurosTotalNuda > 0) txtCopiar += `Nuda propiedad: ${eurosTotalNuda.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n`;
-            
-            const totalRepartidoFinal = eurosTotalPD + eurosTotalUsuf + eurosTotalNuda;
-            txtCopiar += `Total repartido: ${totalRepartidoFinal.toLocaleString('es-ES',{minimumFractionDigits:2})} €`;
 
             document.getElementById('res-reparto').classList.remove('hidden');
             document.getElementById('lista-resultados-usuf').innerHTML = html;
-            document.getElementById('texto-para-copiar').innerText = txtCopiar;
+            document.getElementById('texto-para-copiar').innerText = txtCopiar.trim();
         }
 
         function copiarUsufructo() {
