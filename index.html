@@ -140,7 +140,7 @@
             const fechaTrans = new Date(document.getElementById('f_trans').value);
             if(!valorTotal || isNaN(fechaTrans)) return alert("Faltan datos generales");
 
-            // Buscar edad del usufructuario para Nuda Propiedad
+            // Buscar edad del usufructuario para la Nuda Propiedad
             let uGlobal = 10;
             const filas = Array.from(document.querySelectorAll('.titular-row'));
             const usufRow = filas.find(r => r.querySelector('.t-tipo').value === 'us');
@@ -156,19 +156,20 @@
                 }
             }
 
-            // Agrupar resultados por nombre
+            // Agrupar resultados por nombre para que no salgan separados
             const resultadosPorNombre = {};
 
             filas.forEach(row => {
                 const nombre = (row.querySelector('.t-nombre').value || "Titular").trim();
                 const tipo = row.querySelector('.t-tipo').value;
-                const pct = parseFloat(row.querySelector('.t-pct').value) / 100;
+                const pctOriginal = row.querySelector('.t-pct').value; 
+                const pct = parseFloat(pctOriginal) / 100;
                 let v_final = 0;
                 let desc = "";
 
                 if (tipo === 'pd') {
                     v_final = valorTotal * pct;
-                    desc = "Pleno Dominio";
+                    desc = `Pleno Dominio (${pctOriginal}%)`;
                 } else if (tipo === 'us') {
                     const fNac = new Date(row.querySelector('.t-fecha').value);
                     let edadLocal = fechaTrans.getFullYear() - fNac.getFullYear();
@@ -178,13 +179,15 @@
                     if(uLocal < 10) uLocal = 10;
                     if(uLocal > 70) uLocal = 70;
                     v_final = (valorTotal * (uLocal/100)) * pct;
-                    desc = `Usufructo (${uLocal}%)`;
+                    desc = `Usufructo (${uLocal}%, titular del ${pctOriginal}%)`;
                 } else {
                     v_final = (valorTotal * (1 - uGlobal/100)) * pct;
-                    desc = `Nuda Propiedad (${100-uGlobal}%)`;
+                    desc = `Nuda Propiedad (${100-uGlobal}%, titular del ${pctOriginal}%)`;
                 }
 
-                if (!resultadosPorNombre[nombre]) resultadosPorNombre[nombre] = { total: 0, lineas: [] };
+                if (!resultadosPorNombre[nombre]) {
+                    resultadosPorNombre[nombre] = { total: 0, lineas: [] };
+                }
                 resultadosPorNombre[nombre].total += v_final;
                 resultadosPorNombre[nombre].lineas.push(`${desc}: ${v_final.toLocaleString('es-ES', {minimumFractionDigits:2})} €`);
             });
@@ -196,10 +199,10 @@
                 const data = resultadosPorNombre[nombre];
                 html += `<div class="resultado-titular">
                             <span class="nombre-titular">${nombre}</span>
-                            <div style="font-size: 13px; color: #64748b; margin: 5px 0;">${data.lineas.join(" | ")}</div>
+                            <div style="font-size: 13px; color: #64748b; margin: 5px 0; line-height: 1.4;">${data.lineas.join("<br>")}</div>
                             <div class="total-titular">${data.total.toLocaleString('es-ES', {minimumFractionDigits:2})} €</div>
                          </div>`;
-                textoCopiar += `${nombre}: ${data.lineas.join(" + ")} = ${data.total.toLocaleString('es-ES', {minimumFractionDigits:2})} €\n`;
+                textoCopiar += `${nombre}:\n - ${data.lineas.join("\n - ")}\n TOTAL: ${data.total.toLocaleString('es-ES', {minimumFractionDigits:2})} €\n\n`;
             }
 
             document.getElementById('res-reparto').classList.remove('hidden');
