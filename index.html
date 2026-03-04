@@ -7,7 +7,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link rel="stylesheet" href="styles.css">
     <style>
-        /* Estilos de la Web */
+        /* Estilos de la Web (¡No tocados!) */
         .resumen-propietario {
             border-left: 4px solid #3b82f6;
             padding: 10px 15px;
@@ -315,46 +315,113 @@
             navigator.clipboard.writeText(texto).then(() => alert("✅ Copiado al portapapeles"));
         }
 
+        // --- EXPORTACIÓN PDF PROFESIONAL ACTUALIZADA (SÓLO RESULTADOS) ---
         function generarPDF() {
             const element = document.createElement('div');
-            element.style.padding = "40px";
+            element.style.padding = "30px 40px";
             element.style.fontFamily = "'Helvetica', 'Arial', sans-serif";
+            element.style.color = "#1e293b";
+            element.style.backgroundColor = "white";
             
-            const contenido = document.getElementById('lista-resultados-usuf').innerHTML;
+            // Recopilar datos de la web
             const azul = document.getElementById('info-azul').innerText;
             const detalle = document.getElementById('info-detallada-pct').innerText;
             const total = document.getElementById('total-verde-final').innerHTML;
 
-            element.innerHTML = `
-                <div style="text-align: center; margin-bottom: 30px;">
-                    <img src="logom.png" style="max-height: 60px; margin-bottom: 10px;">
-                    <h2 style="color: #1e293b; margin: 0; font-size: 22px; letter-spacing: 1px;">CÁLCULOS REPARTO</h2>
-                    <div style="width: 50px; height: 3px; background: #3b82f6; margin: 10px auto;"></div>
+            // Construir encabezado profesional
+            let pdfHtml = `
+                <div style="display:flex; justify-content:space-between; align-items:start; border-bottom:1px solid #e2e8f0; padding-bottom:15px; margin-bottom:25px;">
+                    <div>
+                        <h2 style="color:#1e40af; margin:0 0 5px 0; font-size:20px; text-transform:uppercase; letter-spacing:1px;">CÁLCULOS REPARTO</h2>
+                        <div style="width:40px; height:2px; background:#3b82f6;"></div>
+                    </div>
+                    <img src="logom.png" style="max-height:45px;">
                 </div>
-
-                <div style="background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 30px;">
-                    <p style="color: #1e40af; font-weight: bold; margin: 0 0 5px 0; font-size: 14px;">${azul}</p>
-                    <p style="color: #64748b; font-size: 12px; margin: 0;">${detalle}</p>
+                
+                <div style="background:#f8fafc; padding:20px; border-radius:10px; border:1px solid #e2e8f0; margin-bottom:30px;">
+                    <p style="color:#1e40af; font-weight:bold; margin:0 0 8px 0; font-size:14px; letter-spacing:0.3px; line-height:1.4;">${azul}</p>
+                    <p style="color:#64748b; font-size:12px; margin:0; font-weight:500; text-transform:uppercase; letter-spacing:0.5px;">${detalle}</p>
                 </div>
+                
+                <div style="margin-bottom:30px;">
+            `;
 
-                <div style="margin-bottom: 30px;">${contenido}</div>
+            // Construir tabla estilizada para los resultados de cada propietario
+            const propietarios = Array.from(document.querySelectorAll('#lista-resultados-usuf .resumen-propietario'));
+            
+            if (propietarios.length > 0) {
+                pdfHtml += `<table style="width:100%; border-collapse:collapse; font-size:13px; border:1px solid #e2e8f0; border-radius:8px; overflow:hidden;">`;
+                pdfHtml += `<thead style="background-color:#f1f5f9; text-transform:uppercase; color:#475569; font-weight:bold; border-bottom:1px solid #e2e8f0;">
+                               <tr>
+                                   <th style="padding:12px 15px; text-align:left;">Propietario</th>
+                                   <th style="padding:12px 15px; text-align:left;">Derecho (%)</th>
+                                   <th style="padding:12px 15px; text-align:right;">Valor (€)</th>
+                               </tr>
+                           </thead>`;
+                pdfHtml += `<tbody>`;
 
-                <div style="padding: 20px; background: #ecfdf5; border-radius: 8px; border: 1px solid #a7f3d0; text-align: center;">
-                    <span style="font-size: 16px; font-weight: bold; color: #064e3b;">${total}</span>
-                </div>
+                propietarios.forEach((p, index) => {
+                    const nombre = p.querySelector('.label-propietario').innerText.replace('PROPIETARIO: ', '');
+                    const derechos = Array.from(p.querySelectorAll('.linea-derecho'));
+                    const subtotal = p.querySelector('.total-persona').innerText.split(': ')[1];
+                    const rowBg = index % 2 === 0 ? 'white' : '#f8fafc';
 
-                <div style="margin-top: 50px; text-align: center; font-size: 10px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 15px;">
-                    Documento informativo privado generado por MarBlau el ${new Date().toLocaleDateString('es-ES')}
+                    derechos.forEach((d, dIndex) => {
+                        const partesDerecho = d.innerText.split(': ');
+                        const descrDerecho = partesDerecho[0];
+                        const valorDerecho = partesDerecho[1];
+
+                        pdfHtml += `<tr style="background-color:${rowBg}; ${dIndex === derechos.length - 1 ? 'border-bottom: 1px solid #e2e8f0;' : ''}">`;
+                        pdfHtml += `<td style="padding:12px 15px; font-weight:700; color:#1e293b; white-space:nowrap;">${dIndex === 0 ? nombre : ''}</td>`;
+                        pdfHtml += `<td style="padding:12px 15px; color:#475569;">${descrDerecho}</td>`;
+                        pdfHtml += `<td style="padding:12px 15px; text-align:right; font-weight:600; color:#1e293b; white-space:nowrap;">${valorDerecho}</td>`;
+                        pdfHtml += `</tr>`;
+                    });
+
+                    // Fila de subtotal por propietario destacada
+                    pdfHtml += `<tr style="background-color:${rowBg}; border-bottom:2px solid #e2e8f0; border-top:1px solid #f1f5f9;">`;
+                    pdfHtml += `<td colspan="2" style="padding:12px 15px; text-align:right; text-transform:uppercase; color:#64748b; font-weight:bold; letter-spacing:0.5px; font-size:12px;">Total para ${nombre}</td>`;
+                    pdfHtml += `<td style="padding:12px 15px; text-align:right; font-weight:800; color:#0f172a; font-size:14px; white-space:nowrap;">${subtotal}</td>`;
+                    pdfHtml += `</tr>`;
+                });
+
+                pdfHtml += `</tbody>`;
+                pdfHtml += `</table>`;
+            } else {
+                pdfHtml += `<p style="text-align:center; color:#94a3b8; font-style:italic;">No hay resultados de reparto para mostrar.</p>`;
+            }
+
+            pdfHtml += `</div>`; // Cierre del div de contenidos
+
+            // Construir cuadro de total sumado destacable
+            const soloValorTotal = total.split(': ')[1];
+            pdfHtml += `
+                <div style="margin-top:30px; padding:18px; background:#ecfdf5; border-radius:12px; border:2px solid #a7f3d0; text-align:center;">
+                    <span style="font-size: 14px; font-weight: 700; color: #064e3b; text-transform: uppercase; letter-spacing: 1px; display:block; margin-bottom:5px;">Total repartido (Pleno dominio, usufructo, nuda propiedad)</span>
+                    <span style="font-size: 26px; font-weight: 800; color: #064e3b; white-space: nowrap; letter-spacing: -0.5px;">${soloValorTotal}</span>
                 </div>
             `;
 
+            // Construir pie de página elegante
+            pdfHtml += `
+                <div style="margin-top:50px; text-align:center; font-size:10px; color:#94a3b8; border-top:1px solid #f1f5f9; padding-top:20px;">
+                    Informe privado generado por MarBlau el ${new Date().toLocaleDateString('es-ES')}
+                </div>
+            `;
+
+            element.innerHTML = pdfHtml;
+
+            // Configuración óptima para el PDF
             const opt = {
                 margin: 10,
                 filename: 'Reparto_MarBlau.pdf',
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 3 },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                html2canvas: { scale: 3 }, // Alta escala para nitidez de texto
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak: { mode: 'avoid-all' } // Evitar cortes de tabla feos
             };
+
+            // Generar y guardar
             html2pdf().set(opt).from(element).save();
         }
     </script>
