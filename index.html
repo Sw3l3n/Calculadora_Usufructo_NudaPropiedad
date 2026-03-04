@@ -21,7 +21,7 @@
         }
         .linea-derecho {
             font-size: 15px;
-            margin: 4px 0;
+            margin: 3px 0;
             color: #1e293b;
         }
         .total-persona {
@@ -40,7 +40,15 @@
             margin-bottom: 25px;
             border: 1px solid #bfdbfe;
             font-size: 14px;
-            line-height: 1.6;
+            font-weight: 600;
+        }
+        .titulo-seccion-res {
+            font-size: 18px;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 15px;
+            text-align: center;
+            text-transform: uppercase;
         }
     </style>
 </head>
@@ -86,10 +94,11 @@
         </div>
 
         <div id="res-reparto" class="tarjeta hidden">
-            <button class="btn-copiar-usuf" style="margin-bottom: 20px;" onclick="copiarUsufructo()">Copiar Resultados</button>
-            <div id="texto-para-copiar" style="display:none;"></div>
+            <h2 class="titulo-seccion-res">CÁLCULOS REPARTO</h2>
+            <button class="btn-copiar-usuf" style="margin-bottom: 20px; width: 100%;" onclick="copiarUsufructo()">Copiar Resultados</button>
             <div id="info-header-calculo" class="info-calculo-azul"></div>
             <div id="lista-resultados-usuf"></div>
+            <div id="texto-para-copiar" style="display:none;"></div>
         </div>
     </div>
 
@@ -230,18 +239,13 @@
                 usuarios[nombre].total += valorFila;
             });
 
-            // CABECERA AZUL
-            const headerHtml = `
-                <div><b>Edad (más joven) para el cálculo:</b> ${edadUsufMasJoven > 0 ? edadUsufMasJoven + ' años' : 'No definido'}</div>
-                <div style="margin-top:5px; font-weight:700;">
-                    Usufructo: ${uCoef}% &nbsp;&nbsp; Nuda propiedad: ${100 - uCoef}% &nbsp;&nbsp; Pleno dominio: 100%
-                </div>
-            `;
-            document.getElementById('info-header-calculo').innerHTML = headerHtml;
+            // CABECERA 
+            const headerText = `Edad usufructuario para el cálculo: ${edadUsufMasJoven} años, usufructo ${uCoef}%`;
+            document.getElementById('info-header-calculo').innerText = headerText;
 
             // CUERPO RESULTADOS
             let html = "";
-            let txtCopiar = `INFORME MARBLAU\nEdad referencia: ${edadUsufMasJoven} años\nUsufructo: ${uCoef}% | Nuda propiedad: ${100-uCoef}%\n--------------------------\n\n`;
+            let txtCopiar = `CÁLCULOS REPARTO - MARBLAU\n${headerText}\nNuda propiedad: ${100-uCoef}%\n--------------------------\n\n`;
 
             for (const nombre in usuarios) {
                 html += `<div class="resumen-propietario">
@@ -250,30 +254,24 @@
                 
                 usuarios[nombre].lineas.forEach(l => {
                     html += `<div class="linea-derecho">${l.txt}: <b>${l.val.toLocaleString('es-ES',{minimumFractionDigits:2})} €</b></div>`;
-                    txtCopiar += `${l.txt}: ${l.val.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n`;
+                    txtCopiar += ` - ${l.txt}: ${l.val.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n`;
                 });
 
                 html += `<div class="total-persona">Total para ${nombre}: ${usuarios[nombre].total.toLocaleString('es-ES',{minimumFractionDigits:2})} €</div>
                          </div>`;
-                txtCopiar += `Total para ${nombre}: ${usuarios[nombre].total.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n\n`;
+                txtCopiar += `TOTAL: ${usuarios[nombre].total.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n\n`;
             }
 
             document.getElementById('res-reparto').classList.remove('hidden');
             document.getElementById('lista-resultados-usuf').innerHTML = html;
-            
-            // Guardamos el texto en el div oculto
             document.getElementById('texto-para-copiar').innerText = txtCopiar;
         }
 
         function copiarUsufructo() {
             const texto = document.getElementById('texto-para-copiar').innerText;
-            if (!texto) return alert("No hay resultados para copiar");
-            
+            if (!texto) return alert("No hay resultados");
             navigator.clipboard.writeText(texto).then(() => {
-                alert("Resultados copiados al portapapeles");
-            }).catch(err => {
-                console.error('Error al copiar: ', err);
-                alert("Hubo un error al copiar. Por favor, selecciona el texto manualmente.");
+                alert("✅ Copiado al portapapeles");
             });
         }
     </script>
