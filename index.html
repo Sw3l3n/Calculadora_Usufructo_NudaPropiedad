@@ -216,9 +216,13 @@
             const usuarios = {};
             let pctTotalUsuf = 0;
             let pctTotalNuda = 0;
+            let eurosTotalUsuf = 0;
+            let eurosTotalNuda = 0;
+            let eurosTotalPD = 0;
 
             filas.forEach(row => {
-                const nombre = (row.querySelector('.t-nombre').value || "Titular").trim().toUpperCase();
+                const nombreRaw = row.querySelector('.t-nombre').value || "Titular";
+                const nombre = nombreRaw.trim().charAt(0).toUpperCase() + nombreRaw.trim().slice(1);
                 const tipo = row.querySelector('.t-tipo').value;
                 const pctFila = parseFloat(row.querySelector('.t-pct').value) || 0;
                 
@@ -228,14 +232,17 @@
                 if (tipo === 'pd') {
                     valorEuros = valorTotal * (pctFila / 100);
                     etiqueta = `Pleno dominio (${pctFila}%)`;
+                    eurosTotalPD += valorEuros;
                 } else if (tipo === 'us') {
                     valorEuros = (valorTotal * (uCoefLegal / 100)) * (pctFila / 100);
                     etiqueta = `Usufructo (${pctFila}%)`;
                     pctTotalUsuf += pctFila;
+                    eurosTotalUsuf += valorEuros;
                 } else {
                     valorEuros = (valorTotal * (1 - uCoefLegal / 100)) * (pctFila / 100);
                     etiqueta = `Nuda propiedad (${pctFila}%)`;
                     pctTotalNuda += pctFila;
+                    eurosTotalNuda += valorEuros;
                 }
 
                 if (!usuarios[nombre]) usuarios[nombre] = { lineas: [], total: 0 };
@@ -243,7 +250,7 @@
                 usuarios[nombre].total += valorEuros;
             });
 
-            // CABECERA PANTALLA
+            // CABECERA WEB
             const headerHtml = `
                 <div>Edad usufructuario para el cálculo: ${edadUsufMasJoven} años</div>
                 <div style="margin-top:5px;">
@@ -253,11 +260,9 @@
             `;
             document.getElementById('info-header-calculo').innerHTML = headerHtml;
 
-            // TEXTO PARA COPIAR (FORMATO ANTERIOR + TÍTULO CON GUIONES)
-            let txtCopiar = `--- CÁLCULOS REPARTO ---\n`;
-            txtCopiar += `Edad usufructuario para el calculo: ${edadUsufMasJoven} años, usufructo ${pctTotalUsuf}%\n`;
-            txtCopiar += `Nuda propiedad: ${pctTotalNuda}%\n`;
-            txtCopiar += `--------------------------\n\n`;
+            // GENERACIÓN DE TEXTO PARA COPIAR (ESTILO SOLICITADO)
+            let txtCopiar = `--- CÁLCULOS REPARTO ---\n\n`;
+            txtCopiar += `Edad usufructuario para el calculo: ${edadUsufMasJoven} años, usufructo ${pctTotalUsuf}%\n\n`;
 
             let html = "";
             for (const nombre in usuarios) {
@@ -271,10 +276,18 @@
                     txtCopiar += `${l.txt}: ${l.val.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n`;
                 });
 
-                html += `<div class="total-persona">Total para ${nombre}: ${usuarios[nombre].total.toLocaleString('es-ES',{minimumFractionDigits:2})} €</div>
+                html += `<div class="total-persona">Total para ${nombre.toUpperCase()}: ${usuarios[nombre].total.toLocaleString('es-ES',{minimumFractionDigits:2})} €</div>
                          </div>`;
-                txtCopiar += `Total para ${nombre}: ${usuarios[nombre].total.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n\n`;
+                txtCopiar += `Total para ${nombre.toUpperCase()}: ${usuarios[nombre].total.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n\n`;
             }
+
+            // Resumen final del copy
+            if(eurosTotalPD > 0) txtCopiar += `Pleno dominio: ${eurosTotalPD.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n`;
+            if(eurosTotalUsuf > 0) txtCopiar += `Usufructo: ${eurosTotalUsuf.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n`;
+            if(eurosTotalNuda > 0) txtCopiar += `Nuda propiedad: ${eurosTotalNuda.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n`;
+            
+            const totalRepartidoFinal = eurosTotalPD + eurosTotalUsuf + eurosTotalNuda;
+            txtCopiar += `Total repartido: ${totalRepartidoFinal.toLocaleString('es-ES',{minimumFractionDigits:2})} €`;
 
             document.getElementById('res-reparto').classList.remove('hidden');
             document.getElementById('lista-resultados-usuf').innerHTML = html;
