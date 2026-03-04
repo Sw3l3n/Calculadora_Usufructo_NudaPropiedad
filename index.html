@@ -48,7 +48,7 @@
 
         <div id="res-reparto" class="tarjeta hidden">
             <button class="btn-copiar-usuf" onclick="copiarUsufructo()">Copiar Resultados</button>
-            <div id="meta-usuf" class="bloque-resumen-azul"></div>
+            <div id="meta-usuf" class="bloque-resumen-azul">Cálculo realizado según fecha de transmisión.</div>
             <div id="lista-resultados-usuf"></div>
         </div>
     </div>
@@ -140,82 +140,95 @@
             const fechaTrans = new Date(document.getElementById('f_trans').value);
             if(!valorTotal || isNaN(fechaTrans)) return alert("Faltan datos generales");
 
-            // Buscar edad del usufructuario para la Nuda Propiedad
-            let uGlobal = 10;
             const filas = Array.from(document.querySelectorAll('.titular-row'));
+            
+            // 1. CALCULAR VALOR USUFRUCTO (u)
+            let uGlobal = 0;
             const usufRow = filas.find(r => r.querySelector('.t-tipo').value === 'us');
             if (usufRow) {
                 const fNac = new Date(usufRow.querySelector('.t-fecha').value);
                 if (!isNaN(fNac)) {
                     let edad = fechaTrans.getFullYear() - fNac.getFullYear();
-                    const m = fechaTrans.getMonth() - fNac.getMonth();
-                    if (m < 0 || (m === 0 && fechaTrans.getDate() < fNac.getDate())) edad--;
+                    if (fechaTrans < new Date(fechaTrans.getFullYear(), fNac.getMonth(), fNac.getDate())) edad--;
                     uGlobal = 89 - edad;
                     if(uGlobal < 10) uGlobal = 10;
                     if(uGlobal > 70) uGlobal = 70;
                 }
             }
 
-            // Agrupar resultados por nombre para que no salgan separados
-            const resultadosPorNombre = {};
+            // 2. PROCESAR REPARTO
+            const usuarios = {};
+            let totalPD = 0, totalUS = 0, totalNP = 0;
 
             filas.forEach(row => {
-                const nombre = (row.querySelector('.t-nombre').value || "Titular").trim();
+                const nombre = (row.querySelector('.t-nombre').value || "Titular").trim().toUpperCase();
                 const tipo = row.querySelector('.t-tipo').value;
-                const pctOriginal = row.querySelector('.t-pct').value; 
-                const pct = parseFloat(pctOriginal) / 100;
-                let v_final = 0;
-                let desc = "";
+                const pctOriginal = parseFloat(row.querySelector('.t-pct').value);
+                const pct = pctOriginal / 100;
+                let valorFila = 0;
+                let etiqueta = "";
 
                 if (tipo === 'pd') {
-                    v_final = valorTotal * pct;
-                    desc = `Pleno Dominio (${pctOriginal}%)`;
+                    valorFila = valorTotal * pct;
+                    etiqueta = `Pleno dominio (${pctOriginal}%)`;
+                    totalPD += valorFila;
                 } else if (tipo === 'us') {
-                    const fNac = new Date(row.querySelector('.t-fecha').value);
-                    let edadLocal = fechaTrans.getFullYear() - fNac.getFullYear();
-                    const m = fechaTrans.getMonth() - fNac.getMonth();
-                    if (m < 0 || (m === 0 && fechaTrans.getDate() < fNac.getDate())) edadLocal--;
-                    let uLocal = 89 - edadLocal;
-                    if(uLocal < 10) uLocal = 10;
-                    if(uLocal > 70) uLocal = 70;
-                    v_final = (valorTotal * (uLocal/100)) * pct;
-                    desc = `Usufructo (${uLocal}%, titular del ${pctOriginal}%)`;
+                    valorFila = (valorTotal * (uGlobal/100)) * pct;
+                    etiqueta = `Usufructo vitalicio (${pctOriginal}%)`;
+                    totalUS += valorFila;
                 } else {
-                    v_final = (valorTotal * (1 - uGlobal/100)) * pct;
-                    desc = `Nuda Propiedad (${100-uGlobal}%, titular del ${pctOriginal}%)`;
+                    valorFila = (valorTotal * (1 - uGlobal/100)) * pct;
+                    etiqueta = `Nuda propiedad (${pctOriginal}%)`;
+                    totalNP += valorFila;
                 }
 
-                if (!resultadosPorNombre[nombre]) {
-                    resultadosPorNombre[nombre] = { total: 0, lineas: [] };
-                }
-                resultadosPorNombre[nombre].total += v_final;
-                resultadosPorNombre[nombre].lineas.push(`${desc}: ${v_final.toLocaleString('es-ES', {minimumFractionDigits:2})} €`);
+                if (!usuarios[nombre]) usuarios[nombre] = { lineas: [], total: 0 };
+                usuarios[nombre].lineas.push({ txt: etiqueta, val: valorFila });
+                usuarios[nombre].total += valorFila;
             });
 
+            // 3. GENERAR HTML Y TEXTO
             let html = "";
-            let textoCopiar = "CÁLCULO PARTICIPACIONES\n--------------------------\n";
+            let txtCopiar = "INFORME DE REPARTO - MARBLAU\n\n";
 
-            for (const nombre in resultadosPorNombre) {
-                const data = resultadosPorNombre[nombre];
-                html += `<div class="resultado-titular">
-                            <span class="nombre-titular">${nombre}</span>
-                            <div style="font-size: 13px; color: #64748b; margin: 5px 0; line-height: 1.4;">${data.lineas.join("<br>")}</div>
-                            <div class="total-titular">${data.total.toLocaleString('es-ES', {minimumFractionDigits:2})} €</div>
+            for (const nombre in usuarios) {
+                html += `<div class="resultado-titular" style="margin-bottom:20px;">
+                            <div class="plus-label" style="color:#64748b;">Propietario: ${nombre}</div>`;
+                txtCopiar += `Propietario: ${nombre}\n`;
+                
+                usuarios[nombre].lineas.forEach(l => {
+                    html += `<div style="font-size:14px; margin:3px 0;">${l.txt}: <b>${l.val.toLocaleString('es-ES',{minimumFractionDigits:2})} €</b></div>`;
+                    txtCopiar += `${l.txt}: ${l.val.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n`;
+                });
+
+                html += `<div class="total-titular" style="border-top:1px solid #eee; padding-top:5px; margin-top:5px;">Total para ${nombre}: ${usuarios[nombre].total.toLocaleString('es-ES',{minimumFractionDigits:2})} €</div>
                          </div>`;
-                textoCopiar += `${nombre}:\n - ${data.lineas.join("\n - ")}\n TOTAL: ${data.total.toLocaleString('es-ES', {minimumFractionDigits:2})} €\n\n`;
+                txtCopiar += `Total para ${nombre}: ${usuarios[nombre].total.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n\n`;
             }
+
+            // Resumen Final
+            const totalRepartido = totalPD + totalUS + totalNP;
+            html += `<hr style="border:0; border-top:2px dashed #e2e8f0; margin:20px 0;">
+                     <div class="bloque-oscuro-plusvalia">
+                        ${totalUS > 0 ? `<div class="plus-label">Usufructo: ${totalUS.toLocaleString('es-ES',{minimumFractionDigits:2})} €</div>` : ''}
+                        ${totalNP > 0 ? `<div class="plus-label">Nuda Propiedad: ${totalNP.toLocaleString('es-ES',{minimumFractionDigits:2})} €</div>` : ''}
+                        ${totalPD > 0 ? `<div class="plus-label">Pleno Dominio: ${totalPD.toLocaleString('es-ES',{minimumFractionDigits:2})} €</div>` : ''}
+                        <div class="plus-value" style="margin-top:10px; border-top:1px solid rgba(255,255,255,0.2); padding-top:10px;">Total repartido: ${totalRepartido.toLocaleString('es-ES',{minimumFractionDigits:2})} €</div>
+                     </div>`;
+
+            txtCopiar += `Usufructo: ${totalUS.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n`;
+            txtCopiar += `Nuda propiedad: ${totalNP.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n`;
+            txtCopiar += `Total repartido: ${totalRepartido.toLocaleString('es-ES',{minimumFractionDigits:2})} €`;
 
             document.getElementById('res-reparto').classList.remove('hidden');
             document.getElementById('lista-resultados-usuf').innerHTML = html;
-            document.getElementById('meta-usuf').dataset.copy = textoCopiar;
-            document.getElementById('meta-usuf').innerText = "Cálculo realizado según fecha de transmisión.";
+            document.getElementById('meta-usuf').dataset.copy = txtCopiar;
         }
 
         function copiarUsufructo() {
             navigator.clipboard.writeText(document.getElementById('meta-usuf').dataset.copy);
-            alert("✅ Copiado al portapapeles");
+            alert("Copiado al portapapeles correctamente");
         }
     </script>
 </body>
 </html>
-
