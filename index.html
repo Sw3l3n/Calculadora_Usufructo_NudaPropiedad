@@ -87,6 +87,7 @@
 
         <div id="res-reparto" class="tarjeta hidden">
             <button class="btn-copiar-usuf" style="margin-bottom: 20px;" onclick="copiarUsufructo()">Copiar Resultados</button>
+            <div id="texto-para-copiar" style="display:none;"></div>
             <div id="info-header-calculo" class="info-calculo-azul"></div>
             <div id="lista-resultados-usuf"></div>
         </div>
@@ -181,35 +182,29 @@
 
             const filas = Array.from(document.querySelectorAll('.titular-row'));
             
-            // --- NUEVA LÓGICA: BUSCAR EL USUFRUCTUARIO MÁS JOVEN ---
             let edadUsufMasJoven = 0;
-            let uCoef = 10; // Valor mínimo por defecto
+            let uCoef = 10; 
 
             const usufructuarios = filas.filter(r => r.querySelector('.t-tipo').value === 'us');
             
             if (usufructuarios.length > 0) {
                 let fechaNacMasReciente = null;
-                
                 usufructuarios.forEach(r => {
                     const fNac = new Date(r.querySelector('.t-fecha').value);
                     if (!isNaN(fNac)) {
-                        if (!fechaNacMasReciente || fNac > fechaNacMasReciente) {
-                            fechaNacMasReciente = fNac;
-                        }
+                        if (!fechaNacMasReciente || fNac > fechaNacMasReciente) fechaNacMasReciente = fNac;
                     }
                 });
 
                 if (fechaNacMasReciente) {
                     edadUsufMasJoven = fechaTrans.getFullYear() - fechaNacMasReciente.getFullYear();
                     if (fechaTrans < new Date(fechaTrans.getFullYear(), fechaNacMasReciente.getMonth(), fechaNacMasReciente.getDate())) edadUsufMasJoven--;
-                    
                     uCoef = 89 - edadUsufMasJoven;
                     if(uCoef < 10) uCoef = 10;
                     if(uCoef > 70) uCoef = 70;
                 }
             }
 
-            // --- PROCESAR REPARTO CON EL COEFICIENTE ÚNICO ---
             const usuarios = {};
             filas.forEach(row => {
                 const nombre = (row.querySelector('.t-nombre').value || "Titular").trim().toUpperCase();
@@ -246,7 +241,7 @@
 
             // CUERPO RESULTADOS
             let html = "";
-            let txtCopiar = `INFORME MARBLAU\nEdad referencia: ${edadUsufMasJoven} años\nUsufructo: ${uCoef}% | Nuda propiedad: ${100-uCoef}%\n--------------------------\n`;
+            let txtCopiar = `INFORME MARBLAU\nEdad referencia: ${edadUsufMasJoven} años\nUsufructo: ${uCoef}% | Nuda propiedad: ${100-uCoef}%\n--------------------------\n\n`;
 
             for (const nombre in usuarios) {
                 html += `<div class="resumen-propietario">
@@ -265,12 +260,21 @@
 
             document.getElementById('res-reparto').classList.remove('hidden');
             document.getElementById('lista-resultados-usuf').innerHTML = html;
-            document.getElementById('meta-usuf').dataset.copy = txtCopiar;
+            
+            // Guardamos el texto en el div oculto
+            document.getElementById('texto-para-copiar').innerText = txtCopiar;
         }
 
         function copiarUsufructo() {
-            navigator.clipboard.writeText(document.getElementById('meta-usuf').dataset.copy);
-            alert("✅ Copiado al portapapeles");
+            const texto = document.getElementById('texto-para-copiar').innerText;
+            if (!texto) return alert("No hay resultados para copiar");
+            
+            navigator.clipboard.writeText(texto).then(() => {
+                alert("Resultados copiados al portapapeles");
+            }).catch(err => {
+                console.error('Error al copiar: ', err);
+                alert("Hubo un error al copiar. Por favor, selecciona el texto manualmente.");
+            });
         }
     </script>
 </body>
