@@ -65,7 +65,7 @@
             if(document.getElementById('pass_input').value === CLAVE) {
                 localStorage.setItem('sesion_marblau', 'ok');
                 verificarAcceso();
-            } else { alert("Error de acceso"); }
+            } else { alert("Contraseña incorrecta"); }
         }
 
         function verificarAcceso() {
@@ -77,16 +77,18 @@
 
         function cerrarSesion() { localStorage.clear(); location.reload(); }
 
+        // Función corregida: Nuda Propiedad y Pleno Dominio bloquean la fecha
         function toggleFecha(selectElement) {
             const row = selectElement.parentElement.parentElement;
             const inputFecha = row.querySelector('.t-fecha');
-            if (selectElement.value === 'pd') {
+            // Solo se activa si es Usufructo (us)
+            if (selectElement.value === 'us') {
+                inputFecha.disabled = false;
+                inputFecha.style.opacity = "1";
+            } else {
                 inputFecha.value = "";
                 inputFecha.disabled = true;
                 inputFecha.style.opacity = "0.5";
-            } else {
-                inputFecha.disabled = false;
-                inputFecha.style.opacity = "1";
             }
             guardarDatos();
         }
@@ -117,7 +119,11 @@
             const div = document.createElement('div');
             div.className = 'titular-row';
             div.style = "display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-end;";
-            const isPd = data && data.t === 'pd';
+            
+            // Lógica inicial de bloqueo (si no es usufructo, bloqueado)
+            const isUsufructo = data && data.t === 'us';
+            const disableAttr = !isUsufructo && data !== null ? 'disabled style="opacity:0.5"' : (data === null ? 'disabled style="opacity:0.5"' : '');
+
             div.innerHTML = `
                 <div class="campo" style="flex:2;"><label>Nombre</label><input type="text" class="t-nombre" value="${data?data.n:''}" oninput="guardarDatos()"></div>
                 <div class="campo" style="flex:1.5;"><label>Tipo</label>
@@ -128,7 +134,7 @@
                     </select>
                 </div>
                 <div class="campo" style="flex:0.8;"><label>%</label><input type="number" class="t-pct" value="${data?data.p:'100'}" oninput="guardarDatos()"></div>
-                <div class="campo" style="flex:1.2;"><label>F. Nac</label><input type="date" class="t-fecha" value="${data?data.f:''}" oninput="guardarDatos()" ${isPd?'disabled style="opacity:0.5"':''}></div>
+                <div class="campo" style="flex:1.2;"><label>F. Nac</label><input type="date" class="t-fecha" value="${data?data.f:''}" oninput="guardarDatos()" ${disableAttr}></div>
                 <button class="btn-borrar" onclick="this.parentElement.remove(); guardarDatos();">×</button>
             `;
             document.getElementById('contenedor-titulares').appendChild(div);
@@ -137,10 +143,11 @@
         function calcularReparto() {
             const valorTotal = parseFloat(document.getElementById('v_prop').value);
             const fechaTrans = new Date(document.getElementById('f_trans').value);
-            if(!valorTotal || isNaN(fechaTrans)) return alert("Datos de propiedad incompletos");
+            if(!valorTotal || isNaN(fechaTrans)) return alert("Faltan datos generales");
 
             let html = "";
             let textoCopiar = "INFORME DE REPARTO - MARBLAU\n--------------------------\n";
+            let tieneErrores = false;
 
             document.querySelectorAll('.titular-row').forEach(row => {
                 const nombre = row.querySelector('.t-nombre').value || "Titular";
@@ -153,8 +160,18 @@
                     v_final = valorTotal * pct;
                     desc = "Pleno Dominio";
                 } else {
+                    // Para US o NP necesitamos calcular 'u' (valor usufructo)
+                    // Buscamos si hay algún usufructuario en esta fila o en la tabla para determinar 'u'
+                    // Nota: Normalmente el valor de la NP depende de la edad del usufructuario. 
+                    // Si el usuario es NP, se asume que se calcula sobre la edad introducida.
+                    
                     const fNac = new Date(row.querySelector('.t-fecha').value);
-                    if(isNaN(fNac)) return;
+                    if(isNaN(fNac)) {
+                        alert("Falta fecha de nacimiento para el cálculo de Usufructo/Nuda Propiedad");
+                        tieneErrores = true;
+                        return;
+                    }
+                    
                     let edad = fechaTrans.getFullYear() - fNac.getFullYear();
                     const m = fechaTrans.getMonth() - fNac.getMonth();
                     if (m < 0 || (m === 0 && fechaTrans.getDate() < fNac.getDate())) edad--;
@@ -179,15 +196,17 @@
                 textoCopiar += `${nombre}: ${desc} -> ${v_final.toLocaleString('es-ES', {minimumFractionDigits:2})} €\n`;
             });
 
+            if(tieneErrores) return;
+
             document.getElementById('res-reparto').classList.remove('hidden');
             document.getElementById('lista-resultados-usuf').innerHTML = html;
             document.getElementById('meta-usuf').dataset.copy = textoCopiar;
-            document.getElementById('meta-usuf').innerText = "Cálculo realizado correctamente.";
+            document.getElementById('meta-usuf').innerText = "Cálculo finalizado.";
         }
 
         function copiarUsufructo() {
             navigator.clipboard.writeText(document.getElementById('meta-usuf').dataset.copy);
-            alert("Copiado al portapapeles");
+            alert("✅ Copiado al portapapeles");
         }
     </script>
 </body>
