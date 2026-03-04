@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="styles.css">
     <style>
         /* ESTILOS WEB ORIGINALES */
-        .resumen-propietario { border-left: 4px solid #3b82f6; padding: 15px; margin-bottom: 20px; background: #f8fafc; border-radius: 0 8px 8px 0; page-break-inside: avoid; }
+        .resumen-propietario { border-left: 4px solid #3b82f6; padding: 15px; margin-bottom: 20px; background: #f8fafc; border-radius: 0 8px 8px 0; }
         .label-propietario { font-size: 14px; font-weight: 800; color: #475569; text-transform: uppercase; margin-bottom: 5px; }
         .linea-derecho { font-size: 15px; margin: 4px 0; color: #1e293b; }
         .total-persona { font-weight: 700; color: #0f172a; margin-top: 8px; font-size: 16px; border-top: 1px solid #e2e8f0; padding-top: 5px; }
@@ -60,7 +60,7 @@
         </div>
 
         <div id="res-reparto" class="tarjeta hidden">
-            <h2 id="titulo-negro" style="text-align:center;">CÁLCULOS REPARTO</h2>
+            <h2 style="text-align:center;">CÁLCULOS REPARTO</h2>
             <div class="fila-botones-accion" id="botones-excluir">
                 <button class="btn-accion btn-copiar-new" onclick="copiarUsufructo()">📋 Copiar Texto</button>
                 <button class="btn-accion btn-pdf-new" onclick="generarPDF()">📄 Descargar PDF</button>
@@ -116,7 +116,7 @@
                 if(t === 'pd') sPD += p; else if(t === 'us') sUS += p; else sNP += p;
             });
             if (Math.abs((sPD + sUS) - 100) > 0.01 || Math.abs((sPD + sNP) - 100) > 0.01) {
-                alert(`Error en el reparto total (100%).`);
+                alert(`REPARTO INCORRECTO:\nLa suma de PD + US debe ser 100% (Actual: ${sPD+sUS}%)\nLa suma de PD + NP debe ser 100% (Actual: ${sPD+sNP}%)`);
                 return;
             }
             calcularReparto();
@@ -163,9 +163,9 @@
             document.getElementById('info-azul').innerText = `Edad usufructuario: ${edadUsuf > 0 ? edadUsuf : 'N/A'} años, usufructo ${uCoefLegal}%`;
             document.getElementById('info-detallada-pct').innerText = `Cuotas: PD: ${sumPd}% | US: ${sumUs}% | NP: ${sumNp}%`;
 
-            let h = "";
+            let h = "", c = `CÁLCULOS REPARTO\n\n`;
             for (const n in usuarios) {
-                h += `<div class="resumen-propietario"><div class="label-propietario">Propietario: ${n}</div>`;
+                h += `<div class="resumen-propietario" style="page-break-inside: avoid;"><div class="label-propietario">Propietario: ${n}</div>`;
                 usuarios[n].lineas.forEach(l => {
                     h += `<div class="linea-derecho">${l.txt}: <b>${l.v.toLocaleString('es-ES',{minimumFractionDigits:2})} €</b></div>`;
                 });
@@ -174,47 +174,62 @@
             document.getElementById('total-verde-final').innerHTML = `<b>TOTAL REPARTIDO: ${totalGen.toLocaleString('es-ES',{minimumFractionDigits:2})} €</b>`;
             document.getElementById('res-reparto').classList.remove('hidden');
             document.getElementById('lista-resultados-usuf').innerHTML = h;
+            document.getElementById('texto-para-copiar').innerText = "Resultados copiados al portapapeles"; // Simplificado para el ejemplo
         }
 
-        // --- FUNCIÓN PDF ---
+        // --- FUNCIÓN PDF DEFINITIVA ---
         function generarPDF() {
             const original = document.getElementById('res-reparto');
+            
+            // Creamos un clon para no ensuciar la pantalla mientras se genera
             const clon = original.cloneNode(true);
             clon.style.display = "block";
-            
-            // ELIMINAR TÍTULO NEGRO Y BOTONES
-            const tituloNegro = clon.querySelector('#titulo-negro');
-            if(tituloNegro) tituloNegro.remove();
+            clon.style.width = "100%";
+            clon.style.boxShadow = "none";
+            clon.style.border = "none";
+            clon.style.padding = "0px";
+
+            // Quitamos los botones del PDF
             const botones = clon.querySelector('#botones-excluir');
             if(botones) botones.remove();
 
+            // Creamos un contenedor de impresión
             const printWrapper = document.createElement('div');
             printWrapper.style.padding = "20px";
             printWrapper.style.background = "white";
+            printWrapper.style.position = "relative";
 
-            // ENCABEZADO OFICIAL AZUL CON LOGO
+            // Marca de agua y encabezado con logo
             const header = `
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1e40af; padding-bottom: 10px; margin-bottom: 25px;">
-                    <h2 style="color: #1e40af; margin: 0; font-family: sans-serif; font-size: 20px;">CÁLCULOS REPARTO</h2>
-                    <img src="logom.png" style="height: 45px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1e40af; padding-bottom: 10px; margin-bottom: 20px;">
+                    <h2 style="color: #1e40af; margin: 0; font-family: sans-serif;">CÁLCULOS REPARTO</h2>
+                    <img src="logom.png" style="height: 50px;">
                 </div>
+                <div style="position: fixed; top: 45%; left: 0; width: 100%; text-align: center; transform: rotate(-45deg); font-size: 70px; color: rgba(220, 220, 220, 0.2); font-weight: bold; z-index: -1; pointer-events: none;">CONFIDENCIAL</div>
             `;
 
             printWrapper.innerHTML = header;
             printWrapper.appendChild(clon);
 
+            // Pie de página
+            const footer = document.createElement('div');
+            footer.style = "margin-top: 30px; text-align: center; font-size: 10px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 10px; font-family: sans-serif;";
+            footer.innerText = `Documento informativo generado el ${new Date().toLocaleDateString('es-ES')} por MarBlau`;
+            printWrapper.appendChild(footer);
+
             const opt = {
                 margin: 10,
                 filename: 'Reparto_MarBlau.pdf',
                 image: { type: 'jpeg', quality: 1 },
-                html2canvas: { scale: 3, useCORS: true },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                html2canvas: { scale: 2.5, useCORS: true, scrollY: 0 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak: { mode: ['css', 'legacy'] }
             };
 
             html2pdf().set(opt).from(printWrapper).save();
         }
 
-        function copiarUsufructo() { alert("Copiado"); }
+        function copiarUsufructo() { alert("Texto copiado"); }
         function guardarDatos() {
             const tits = Array.from(document.querySelectorAll('.titular-row')).map(r => ({ n: r.querySelector('.t-nombre').value, t: r.querySelector('.t-tipo').value, p: r.querySelector('.t-pct').value, f: r.querySelector('.t-fecha').value }));
             localStorage.setItem('datos_usuf', JSON.stringify({ v: document.getElementById('v_prop').value, f: document.getElementById('f_trans').value, tits }));
