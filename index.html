@@ -21,7 +21,7 @@
         }
         .linea-derecho {
             font-size: 15px;
-            margin: 3px 0;
+            margin: 4px 0;
             color: #1e293b;
         }
         .total-persona {
@@ -181,21 +181,35 @@
 
             const filas = Array.from(document.querySelectorAll('.titular-row'));
             
-            let edadUsuf = 0;
-            let uCoef = 0;
-            const usufRow = filas.find(r => r.querySelector('.t-tipo').value === 'us');
+            // --- NUEVA LÓGICA: BUSCAR EL USUFRUCTUARIO MÁS JOVEN ---
+            let edadUsufMasJoven = 0;
+            let uCoef = 10; // Valor mínimo por defecto
+
+            const usufructuarios = filas.filter(r => r.querySelector('.t-tipo').value === 'us');
             
-            if (usufRow) {
-                const fNac = new Date(usufRow.querySelector('.t-fecha').value);
-                if (!isNaN(fNac)) {
-                    edadUsuf = fechaTrans.getFullYear() - fNac.getFullYear();
-                    if (fechaTrans < new Date(fechaTrans.getFullYear(), fNac.getMonth(), fNac.getDate())) edadUsuf--;
-                    uCoef = 89 - edadUsuf;
+            if (usufructuarios.length > 0) {
+                let fechaNacMasReciente = null;
+                
+                usufructuarios.forEach(r => {
+                    const fNac = new Date(r.querySelector('.t-fecha').value);
+                    if (!isNaN(fNac)) {
+                        if (!fechaNacMasReciente || fNac > fechaNacMasReciente) {
+                            fechaNacMasReciente = fNac;
+                        }
+                    }
+                });
+
+                if (fechaNacMasReciente) {
+                    edadUsufMasJoven = fechaTrans.getFullYear() - fechaNacMasReciente.getFullYear();
+                    if (fechaTrans < new Date(fechaTrans.getFullYear(), fechaNacMasReciente.getMonth(), fechaNacMasReciente.getDate())) edadUsufMasJoven--;
+                    
+                    uCoef = 89 - edadUsufMasJoven;
                     if(uCoef < 10) uCoef = 10;
                     if(uCoef > 70) uCoef = 70;
                 }
             }
 
+            // --- PROCESAR REPARTO CON EL COEFICIENTE ÚNICO ---
             const usuarios = {};
             filas.forEach(row => {
                 const nombre = (row.querySelector('.t-nombre').value || "Titular").trim().toUpperCase();
@@ -223,7 +237,7 @@
 
             // CABECERA AZUL
             const headerHtml = `
-                <div><b>Edad usufructuario para el cálculo:</b> ${edadUsuf > 0 ? edadUsuf + ' años' : 'No definido'}</div>
+                <div><b>Edad (más joven) para el cálculo:</b> ${edadUsufMasJoven > 0 ? edadUsufMasJoven + ' años' : 'No definido'}</div>
                 <div style="margin-top:5px; font-weight:700;">
                     Usufructo: ${uCoef}% &nbsp;&nbsp; Nuda propiedad: ${100 - uCoef}% &nbsp;&nbsp; Pleno dominio: 100%
                 </div>
@@ -232,7 +246,7 @@
 
             // CUERPO RESULTADOS
             let html = "";
-            let txtCopiar = `INFORME MARBLAU\nEdad usufructuario: ${edadUsuf} años\nUsufructo: ${uCoef}% | Nuda propiedad: ${100-uCoef}%\n--------------------------\n`;
+            let txtCopiar = `INFORME MARBLAU\nEdad referencia: ${edadUsufMasJoven} años\nUsufructo: ${uCoef}% | Nuda propiedad: ${100-uCoef}%\n--------------------------\n`;
 
             for (const nombre in usuarios) {
                 html += `<div class="resumen-propietario">
