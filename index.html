@@ -94,7 +94,7 @@
         </div>
 
         <div id="res-reparto" class="tarjeta hidden">
-            <h2 class="titulo-seccion-res">--- CÁLCULOS REPARTO ---</h2>
+            <h2 class="titulo-seccion-res">CÁLCULOS REPARTO</h2>
             <button class="btn-copiar-usuf" style="margin-bottom: 20px; width: 100%;" onclick="copiarUsufructo()">Copiar Resultados</button>
             <div id="info-header-calculo" class="info-calculo-azul"></div>
             <div id="lista-resultados-usuf"></div>
@@ -186,8 +186,7 @@
 
         function calcularReparto() {
             const valorTotal = parseFloat(document.getElementById('v_prop').value);
-            const fechaTransStr = document.getElementById('f_trans').value;
-            const fechaTrans = new Date(fechaTransStr);
+            const fechaTrans = new Date(document.getElementById('f_trans').value);
             if(!valorTotal || isNaN(fechaTrans)) return alert("Faltan datos generales");
 
             const filas = Array.from(document.querySelectorAll('.titular-row'));
@@ -254,29 +253,27 @@
             `;
             document.getElementById('info-header-calculo').innerHTML = headerHtml;
 
-            // FORMATO PARA COPIAR (TEXTO PLANO LIMPIO)
-            let txtCopiar = `--- CÁLCULOS REPARTO ---\n\n`;
-            txtCopiar += `VALOR TOTAL: ${valorTotal.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n`;
-            txtCopiar += `EDAD REF: ${edadUsufMasJoven} años\n`;
-            txtCopiar += `USUFRUCTO TOTAL: ${pctTotalUsuf}% | NUDA PROPIEDAD: ${pctTotalNuda}%\n`;
-            txtCopiar += `----------------------------------------\n\n`;
+            // TEXTO PARA COPIAR (FORMATO ANTERIOR + TÍTULO CON GUIONES)
+            let txtCopiar = `--- CÁLCULOS REPARTO ---\n`;
+            txtCopiar += `Edad usufructuario para el calculo: ${edadUsufMasJoven} años, usufructo ${pctTotalUsuf}%\n`;
+            txtCopiar += `Nuda propiedad: ${pctTotalNuda}%\n`;
+            txtCopiar += `--------------------------\n\n`;
 
             let html = "";
             for (const nombre in usuarios) {
                 html += `<div class="resumen-propietario">
                             <div class="label-propietario">Propietario: ${nombre}</div>`;
                 
-                txtCopiar += `TITULAR: ${nombre}\n`;
+                txtCopiar += `Propietario: ${nombre}\n`;
                 
                 usuarios[nombre].lineas.forEach(l => {
                     html += `<div class="linea-derecho">${l.txt}: <b>${l.val.toLocaleString('es-ES',{minimumFractionDigits:2})} €</b></div>`;
-                    txtCopiar += `> ${l.txt}: ${l.val.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n`;
+                    txtCopiar += `${l.txt}: ${l.val.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n`;
                 });
 
                 html += `<div class="total-persona">Total para ${nombre}: ${usuarios[nombre].total.toLocaleString('es-ES',{minimumFractionDigits:2})} €</div>
                          </div>`;
-                txtCopiar += `SUBTOTAL: ${usuarios[nombre].total.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n`;
-                txtCopiar += `----------------------------------------\n\n`;
+                txtCopiar += `Total para ${nombre}: ${usuarios[nombre].total.toLocaleString('es-ES',{minimumFractionDigits:2})} €\n\n`;
             }
 
             document.getElementById('res-reparto').classList.remove('hidden');
@@ -288,7 +285,7 @@
             const texto = document.getElementById('texto-para-copiar').innerText;
             if (!texto) return alert("No hay resultados");
             navigator.clipboard.writeText(texto).then(() => {
-                alert("✅ Copiado al portapapeles con formato mejorado");
+                alert("✅ Copiado al portapapeles");
             });
         }
     </script>
