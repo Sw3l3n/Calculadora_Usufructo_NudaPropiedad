@@ -2,17 +2,17 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>MarBlau - Gestión Usufructos</title>
+    <title>MarBlau - Cálculo de Reparto</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body onload="iniciarApp()">
 
-    <div id="login-box" class="contenedor" style="margin-top: 100px;">
-        <div class="tarjeta" style="text-align: center;">
+    <div id="login-box" class="contenedor" style="margin-top: 100px; text-align: center;">
+        <div class="tarjeta">
             <img src="logom.png" alt="MarBlau" style="max-width: 180px; margin-bottom: 20px;">
             <p style="font-weight: 700; color: #64748b; margin-bottom: 20px;">SISTEMA DE CÁLCULO PRIVADO</p>
             <input type="password" id="pass_input" style="text-align: center; width: 100%; max-width: 300px; margin-bottom: 15px;" placeholder="Contraseña">
-            <button class="btn-calcular" style="display: block; margin: auto; width: 100%; max-width: 300px;" onclick="comprobarPass()">Entrar</button>
+            <button class="btn-calcular" style="display: block; margin: auto; max-width: 300px;" onclick="comprobarPass()">ENTRAR</button>
         </div>
     </div>
 
@@ -24,36 +24,33 @@
         </div>
 
         <div class="tarjeta">
-            <div style="text-align: center; margin-bottom: 20px;"><img src="logom.png" style="max-width: 100px;"></div>
-            <h1 style="text-align: center; margin-bottom: 30px;">Cálculo de Reparto</h1>
+            <div style="text-align: center; margin-bottom: 15px;"><img src="logom.png" style="max-width: 90px;"></div>
+            <h1>Cálculo de Reparto</h1>
             
             <div class="fila-inputs">
-                <div class="campo" style="flex: 2;">
-                    <label>Valor total propiedad (€)</label>
-                    <input type="number" id="valor_propiedad" placeholder="Ej: 200000" style="font-weight: 800; font-size: 20px;">
+                <div class="campo">
+                    <label>VALOR TOTAL PROPIEDAD (€)</label>
+                    <input type="number" id="v_prop" placeholder="Ej: 200000">
                 </div>
-                <div class="campo" style="flex: 1;">
-                    <label>Fecha transmisión</label>
-                    <input type="date" id="fecha_venta">
+                <div class="campo">
+                    <label>FECHA TRANSMISIÓN</label>
+                    <input type="date" id="f_trans">
                 </div>
             </div>
 
-            <h2 style="font-size: 14px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; color: #64748b;">TITULARES Y DERECHOS</h2>
-            <div id="contenedor-titulares"></div>
-            
-            <div style="margin-top: 25px; display: flex; gap: 15px;">
+            <div id="contenedor-titulares">
+                </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
                 <button class="btn-añadir" onclick="agregarTitular()">+ Añadir Titular</button>
-                <button class="btn-calcular" onclick="generarInforme()" style="flex-grow: 1;">Calcular Reparto</button>
+                <button class="btn-calcular" onclick="calcularReparto()">CALCULAR REPARTO</button>
             </div>
         </div>
 
-        <div id="seccion-informe" class="tarjeta hidden">
-            <h2 style="margin-top: 0; font-size: 18px; color: var(--accent-color); border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">Desglose de la Operación</h2>
-            
-            <div id="metadatos-azul" class="bloque-resumen-azul"></div>
-            
-            <div id="resultados-lista">
-                </div>
+        <div id="res-reparto" class="tarjeta hidden">
+            <button class="btn-copiar-usuf" onclick="copiarUsufructo()">Copiar Resultados</button>
+            <div id="meta-usuf" class="bloque-resumen-azul"></div>
+            <div id="lista-resultados-usuf"></div>
         </div>
     </div>
 
@@ -61,125 +58,110 @@
         const CLAVE = "marblau2026";
 
         function iniciarApp() {
-            document.getElementById('fecha_venta').valueAsDate = new Date();
-            if(sessionStorage.getItem('sesion_marblau') === 'ok') verificarAcceso();
+            verificarAcceso();
+            recuperarDatos();
+            if (document.getElementById('contenedor-titulares').children.length === 0) agregarTitular();
         }
 
         function comprobarPass() {
             if(document.getElementById('pass_input').value === CLAVE) {
-                sessionStorage.setItem('sesion_marblau', 'ok');
+                localStorage.setItem('sesion_marblau', 'ok');
                 verificarAcceso();
-            } else { alert("Acceso denegado"); }
+            } else { alert("Error de acceso"); }
         }
 
         function verificarAcceso() {
-            if(sessionStorage.getItem('sesion_marblau') === 'ok') {
+            if(localStorage.getItem('sesion_marblau') === 'ok') {
                 document.getElementById('login-box').classList.add('hidden');
                 document.getElementById('contenido-privado').classList.remove('hidden');
             }
         }
 
-        function cerrarSesion() { sessionStorage.clear(); location.reload(); }
+        function cerrarSesion() {
+            localStorage.clear();
+            location.reload();
+        }
 
-        function agregarTitular() {
+        function guardarDatos() {
+            const titulares = Array.from(document.querySelectorAll('.titular-row')).map(row => ({
+                n: row.querySelector('.t-nombre').value,
+                t: row.querySelector('.t-tipo').value,
+                p: row.querySelector('.t-pct').value,
+                f: row.querySelector('.t-fecha').value
+            }));
+            const datos = { v: document.getElementById('v_prop').value, f: document.getElementById('f_trans').value, tits: titulares };
+            localStorage.setItem('datos_usuf', JSON.stringify(datos));
+        }
+
+        function recuperarDatos() {
+            const data = JSON.parse(localStorage.getItem('datos_usuf'));
+            if(data) {
+                document.getElementById('v_prop').value = data.v;
+                document.getElementById('f_trans').value = data.f;
+                data.tits.forEach(t => agregarTitular(t));
+            }
+        }
+
+        function agregarTitular(data = null) {
             const div = document.createElement('div');
-            div.className = 'titular-row fila-inputs';
+            div.className = 'titular-row';
+            div.style = "display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-end;";
             div.innerHTML = `
-                <div class="campo" style="flex:2.5;"><label>Nombre</label><input type="text" class="t-nombre" placeholder="Ej: Juan Pérez"></div>
-                <div class="campo" style="flex:1.5;"><label>Tipo</label>
-                    <select class="t-tipo" onchange="this.parentElement.parentElement.querySelector('.t-fecha').disabled=(this.value!=='usufructo')">
-                        <option value="pleno">Pleno dominio</option>
-                        <option value="nuda">Nuda propiedad</option>
-                        <option value="usufructo">Usufructo</option>
-                    </select>
-                </div>
-                <div class="campo" style="flex:0.6;"><label>%</label><input type="number" class="t-pct" value="100"></div>
-                <div class="campo" style="flex:1.2;"><label>Fecha Nac.</label><input type="date" class="t-fecha" disabled></div>
-                <button class="btn-borrar" onclick="this.parentElement.remove()">×</button>
+                <div class="campo" style="flex:2;"><label>Nombre</label><input type="text" class="t-nombre" value="${data?data.n:''}" oninput="guardarDatos()"></div>
+                <div class="campo" style="flex:1.5;"><label>Tipo</label><select class="t-tipo" onchange="guardarDatos()">
+                    <option value="pd" ${data&&data.t=='pd'?'selected':''}>Pleno Dominio</option>
+                    <option value="us" ${data&&data.t=='us'?'selected':''}>Usufructo</option>
+                    <option value="np" ${data&&data.t=='np'?'selected':''}>Nuda Propiedad</option>
+                </select></div>
+                <div class="campo" style="flex:0.8;"><label>%</label><input type="number" class="t-pct" value="${data?data.p:'100'}" oninput="guardarDatos()"></div>
+                <div class="campo" style="flex:1.2;"><label>F. Nac</label><input type="date" class="t-fecha" value="${data?data.f:''}" oninput="guardarDatos()"></div>
+                <button class="btn-borrar" onclick="this.parentElement.remove(); guardarDatos();">×</button>
             `;
             document.getElementById('contenedor-titulares').appendChild(div);
         }
 
-        function generarInforme() {
-            const valorTotal = parseFloat(document.getElementById('valor_propiedad').value);
-            const fechaVentaStr = document.getElementById('fecha_venta').value;
-            const filas = document.querySelectorAll('.titular-row');
-            
-            if(!valorTotal || !fechaVentaStr || filas.length === 0) return alert("Faltan datos");
+        function calcularReparto() {
+            const valorTotal = parseFloat(document.getElementById('v_prop').value);
+            const fechaTrans = new Date(document.getElementById('f_trans').value);
+            let html = "";
+            let textoCopiar = "INFORME DE REPARTO - MARBLAU\n--------------------------\n";
 
-            const fechaRef = new Date(fechaVentaStr);
-            let edadMenor = 999;
-            let tieneUsufructo = false;
+            document.querySelectorAll('.titular-row').forEach(row => {
+                const nombre = row.querySelector('.t-nombre').value;
+                const tipo = row.querySelector('.t-tipo').value;
+                const pct = parseFloat(row.querySelector('.t-pct').value) / 100;
+                const fNac = new Date(row.querySelector('.t-fecha').value);
+                
+                let edad = fechaTrans.getFullYear() - fNac.getFullYear();
+                let u = 89 - edad;
+                if(u < 10) u = 10;
+                if(u > 70) u = 70;
 
-            filas.forEach(f => {
-                if(f.querySelector('.t-tipo').value === 'usufructo' && f.querySelector('.t-fecha').value) {
-                    tieneUsufructo = true;
-                    let fNac = new Date(f.querySelector('.t-fecha').value);
-                    let edad = fechaRef.getFullYear() - fNac.getFullYear();
-                    if (fechaRef.getMonth() < fNac.getMonth() || (fechaRef.getMonth() === fNac.getMonth() && fechaRef.getDate() < fNac.getDate())) edad--;
-                    if(edad < edadMenor) edadMenor = edad;
-                }
+                let v_final = 0;
+                let desc = "";
+
+                if(tipo === 'pd') { v_final = valorTotal * pct; desc = "Pleno Dominio"; }
+                else if(tipo === 'us') { v_final = (valorTotal * (u/100)) * pct; desc = `Usufructo (${u}%)`; }
+                else { v_final = (valorTotal * (1 - u/100)) * pct; desc = `Nuda Propiedad (${100-u}%)`; }
+
+                html += `<div class="resultado-titular">
+                            <span class="nombre-titular">${nombre} - ${desc}</span>
+                            <div class="total-titular">${v_final.toLocaleString('es-ES', {minimumFractionDigits:2})} €</div>
+                         </div>`;
+                textoCopiar += `${nombre}: ${desc} -> ${v_final.toLocaleString('es-ES', {minimumFractionDigits:2})} €\n`;
             });
 
-            const uPct = tieneUsufructo ? Math.max(10, Math.min(70, 89 - edadMenor)) : 0;
-            const nPct = 100 - uPct;
-            
-            const cajaAzul = document.getElementById('metadatos-azul');
-            if(!tieneUsufructo) {
-                cajaAzul.classList.add('hidden');
-            } else {
-                cajaAzul.classList.remove('hidden');
-                cajaAzul.innerHTML = `
-                    <div class="resumen-linea-1">Coeficiente Usufructo: ${uPct}% (Edad: ${edadMenor} años)</div>
-                    <div class="resumen-linea-2">Coeficiente Nuda Propiedad: ${nPct}%</div>
-                `;
-            }
-
-            let htmlResultados = "";
-            let propietarios = {};
-
-            filas.forEach(f => {
-                let nombre = (f.querySelector('.t-nombre').value || "Titular").trim();
-                let tipo = f.querySelector('.t-tipo').value;
-                let pctInmueble = parseFloat(f.querySelector('.t-pct').value) || 0;
-                let valorCalculado = 0;
-                let tipoTxt = "";
-
-                if(tipo === 'usufructo') { 
-                    valorCalculado = (valorTotal * (pctInmueble/100)) * (uPct/100); 
-                    tipoTxt = "Usufructo"; 
-                } else if(tipo === 'nuda') { 
-                    valorCalculado = (valorTotal * (pctInmueble/100)) * (nPct/100); 
-                    tipoTxt = "Nuda propiedad"; 
-                } else { 
-                    valorCalculado = valorTotal * (pctInmueble/100); 
-                    tipoTxt = "Pleno dominio"; 
-                }
-
-                if(!propietarios[nombre]) propietarios[nombre] = { items: [], total: 0 };
-                propietarios[nombre].items.push({txt: tipoTxt, pct: pctInmueble, val: valorCalculado});
-                propietarios[nombre].total += valorCalculado;
-            });
-
-            for(let p in propietarios) {
-                htmlResultados += `
-                    <div class="resultado-titular">
-                        <span class="nombre-titular">${p.toUpperCase()}</span>
-                        ${propietarios[p].items.map(i => `
-                            <div class="detalle-item">• ${i.txt} (${i.pct}%): <strong>${i.val.toLocaleString('es-ES', {minimumFractionDigits:2})} €</strong></div>
-                        `).join('')}
-                        <div class="total-titular">Total: ${propietarios[p].total.toLocaleString('es-ES', {minimumFractionDigits:2})} €</div>
-                    </div>
-                `;
-            }
-
-            document.getElementById('seccion-informe').classList.remove('hidden');
-            document.getElementById('resultados-lista').innerHTML = htmlResultados;
+            document.getElementById('res-reparto').classList.remove('hidden');
+            document.getElementById('lista-resultados-usuf').innerHTML = html;
+            document.getElementById('meta-usuf').dataset.copy = textoCopiar;
+            document.getElementById('meta-usuf').innerText = "Cálculo realizado según fecha de transmisión.";
         }
 
-        agregarTitular();
+        function copiarUsufructo() {
+            const txt = document.getElementById('meta-usuf').dataset.copy;
+            navigator.clipboard.writeText(txt);
+            alert("Copiado al portapapeles");
+        }
     </script>
 </body>
 </html>
-
-
