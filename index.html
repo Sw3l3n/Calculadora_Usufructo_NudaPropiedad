@@ -30,16 +30,15 @@
             <div class="fila-inputs">
                 <div class="campo">
                     <label>VALOR TOTAL PROPIEDAD (€)</label>
-                    <input type="number" id="v_prop" placeholder="Ej: 200000">
+                    <input type="number" id="v_prop" placeholder="Ej: 200000" oninput="guardarDatos()">
                 </div>
                 <div class="campo">
                     <label>FECHA TRANSMISIÓN</label>
-                    <input type="date" id="f_trans">
+                    <input type="date" id="f_trans" oninput="guardarDatos()">
                 </div>
             </div>
 
-            <div id="contenedor-titulares">
-                </div>
+            <div id="contenedor-titulares"></div>
 
             <div style="display: flex; gap: 10px; margin-top: 20px;">
                 <button class="btn-añadir" onclick="agregarTitular()">+ Añadir Titular</button>
@@ -59,8 +58,7 @@
 
         function iniciarApp() {
             verificarAcceso();
-            recuperarDatos();
-            if (document.getElementById('contenedor-titulares').children.length === 0) agregarTitular();
+            if (!recuperarDatos()) agregarTitular();
         }
 
         function comprobarPass() {
@@ -77,9 +75,20 @@
             }
         }
 
-        function cerrarSesion() {
-            localStorage.clear();
-            location.reload();
+        function cerrarSesion() { localStorage.clear(); location.reload(); }
+
+        function toggleFecha(selectElement) {
+            const row = selectElement.parentElement.parentElement;
+            const inputFecha = row.querySelector('.t-fecha');
+            if (selectElement.value === 'pd') {
+                inputFecha.value = "";
+                inputFecha.disabled = true;
+                inputFecha.style.opacity = "0.5";
+            } else {
+                inputFecha.disabled = false;
+                inputFecha.style.opacity = "1";
+            }
+            guardarDatos();
         }
 
         function guardarDatos() {
@@ -99,22 +108,27 @@
                 document.getElementById('v_prop').value = data.v;
                 document.getElementById('f_trans').value = data.f;
                 data.tits.forEach(t => agregarTitular(t));
+                return true;
             }
+            return false;
         }
 
         function agregarTitular(data = null) {
             const div = document.createElement('div');
             div.className = 'titular-row';
             div.style = "display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-end;";
+            const isPd = data && data.t === 'pd';
             div.innerHTML = `
                 <div class="campo" style="flex:2;"><label>Nombre</label><input type="text" class="t-nombre" value="${data?data.n:''}" oninput="guardarDatos()"></div>
-                <div class="campo" style="flex:1.5;"><label>Tipo</label><select class="t-tipo" onchange="guardarDatos()">
-                    <option value="pd" ${data&&data.t=='pd'?'selected':''}>Pleno Dominio</option>
-                    <option value="us" ${data&&data.t=='us'?'selected':''}>Usufructo</option>
-                    <option value="np" ${data&&data.t=='np'?'selected':''}>Nuda Propiedad</option>
-                </select></div>
+                <div class="campo" style="flex:1.5;"><label>Tipo</label>
+                    <select class="t-tipo" onchange="toggleFecha(this)">
+                        <option value="pd" ${data&&data.t=='pd'?'selected':''}>Pleno Dominio</option>
+                        <option value="us" ${data&&data.t=='us'?'selected':''}>Usufructo</option>
+                        <option value="np" ${data&&data.t=='np'?'selected':''}>Nuda Propiedad</option>
+                    </select>
+                </div>
                 <div class="campo" style="flex:0.8;"><label>%</label><input type="number" class="t-pct" value="${data?data.p:'100'}" oninput="guardarDatos()"></div>
-                <div class="campo" style="flex:1.2;"><label>F. Nac</label><input type="date" class="t-fecha" value="${data?data.f:''}" oninput="guardarDatos()"></div>
+                <div class="campo" style="flex:1.2;"><label>F. Nac</label><input type="date" class="t-fecha" value="${data?data.f:''}" oninput="guardarDatos()" ${isPd?'disabled style="opacity:0.5"':''}></div>
                 <button class="btn-borrar" onclick="this.parentElement.remove(); guardarDatos();">×</button>
             `;
             document.getElementById('contenedor-titulares').appendChild(div);
@@ -123,26 +137,40 @@
         function calcularReparto() {
             const valorTotal = parseFloat(document.getElementById('v_prop').value);
             const fechaTrans = new Date(document.getElementById('f_trans').value);
+            if(!valorTotal || isNaN(fechaTrans)) return alert("Datos de propiedad incompletos");
+
             let html = "";
             let textoCopiar = "INFORME DE REPARTO - MARBLAU\n--------------------------\n";
 
             document.querySelectorAll('.titular-row').forEach(row => {
-                const nombre = row.querySelector('.t-nombre').value;
+                const nombre = row.querySelector('.t-nombre').value || "Titular";
                 const tipo = row.querySelector('.t-tipo').value;
                 const pct = parseFloat(row.querySelector('.t-pct').value) / 100;
-                const fNac = new Date(row.querySelector('.t-fecha').value);
-                
-                let edad = fechaTrans.getFullYear() - fNac.getFullYear();
-                let u = 89 - edad;
-                if(u < 10) u = 10;
-                if(u > 70) u = 70;
-
                 let v_final = 0;
                 let desc = "";
 
-                if(tipo === 'pd') { v_final = valorTotal * pct; desc = "Pleno Dominio"; }
-                else if(tipo === 'us') { v_final = (valorTotal * (u/100)) * pct; desc = `Usufructo (${u}%)`; }
-                else { v_final = (valorTotal * (1 - u/100)) * pct; desc = `Nuda Propiedad (${100-u}%)`; }
+                if(tipo === 'pd') {
+                    v_final = valorTotal * pct;
+                    desc = "Pleno Dominio";
+                } else {
+                    const fNac = new Date(row.querySelector('.t-fecha').value);
+                    if(isNaN(fNac)) return;
+                    let edad = fechaTrans.getFullYear() - fNac.getFullYear();
+                    const m = fechaTrans.getMonth() - fNac.getMonth();
+                    if (m < 0 || (m === 0 && fechaTrans.getDate() < fNac.getDate())) edad--;
+                    
+                    let u = 89 - edad;
+                    if(u < 10) u = 10;
+                    if(u > 70) u = 70;
+
+                    if(tipo === 'us') {
+                        v_final = (valorTotal * (u/100)) * pct;
+                        desc = `Usufructo (${u}%)`;
+                    } else {
+                        v_final = (valorTotal * (1 - u/100)) * pct;
+                        desc = `Nuda Propiedad (${100-u}%)`;
+                    }
+                }
 
                 html += `<div class="resultado-titular">
                             <span class="nombre-titular">${nombre} - ${desc}</span>
@@ -154,12 +182,11 @@
             document.getElementById('res-reparto').classList.remove('hidden');
             document.getElementById('lista-resultados-usuf').innerHTML = html;
             document.getElementById('meta-usuf').dataset.copy = textoCopiar;
-            document.getElementById('meta-usuf').innerText = "Cálculo realizado según fecha de transmisión.";
+            document.getElementById('meta-usuf').innerText = "Cálculo realizado correctamente.";
         }
 
         function copiarUsufructo() {
-            const txt = document.getElementById('meta-usuf').dataset.copy;
-            navigator.clipboard.writeText(txt);
+            navigator.clipboard.writeText(document.getElementById('meta-usuf').dataset.copy);
             alert("Copiado al portapapeles");
         }
     </script>
