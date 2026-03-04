@@ -5,12 +5,13 @@
     <title>MarBlau - Plusvalía</title>
     <link rel="stylesheet" href="styles.css">
 </head>
-<body onload="verificarAcceso()">
+<body onload="iniciarApp()">
+
     <div id="login-box" class="contenedor" style="margin-top: 100px; text-align: center;">
         <div class="tarjeta">
-            <img src="logom.png" alt="MarBlau" style="max-width: 200px;">
-            <p style="margin: 20px 0; font-weight: 600;">Acceso Privado</p>
-            <input type="password" id="pass_input" style="text-align: center; max-width: 300px; margin-bottom: 15px;" placeholder="Contraseña">
+            <img src="logom.png" alt="MarBlau" style="max-width: 180px; margin-bottom: 20px;">
+            <p style="font-weight: 700; color: #64748b; margin-bottom: 20px;">SISTEMA DE CÁLCULO PRIVADO</p>
+            <input type="password" id="pass_input" style="text-align: center; width: 100%; max-width: 300px; margin-bottom: 15px;" placeholder="Contraseña">
             <button class="btn-calcular" style="display: block; margin: auto; max-width: 300px;" onclick="comprobarPass()">ENTRAR</button>
         </div>
     </div>
@@ -23,54 +24,82 @@
         </div>
 
         <div class="tarjeta">
-            <div style="text-align: center;"><img src="logom.png" style="max-width: 90px; margin-bottom: 10px;"></div>
+            <div style="text-align: center;"><img src="logom.png" style="max-width: 90px; margin-bottom: 15px;"></div>
             <h1>Cálculo de Plusvalía</h1>
             
             <div class="fila-inputs">
-                <div class="campo"><label>Fecha Adquisición</label><input type="date" id="f_c"></div>
-                <div class="campo"><label>Fecha Venta</label><input type="date" id="f_v"></div>
+                <div class="campo"><label>Fecha Adquisición</label><input type="date" id="f_c" oninput="guardarPlus()"></div>
+                <div class="campo"><label>Fecha Venta</label><input type="date" id="f_v" oninput="guardarPlus()"></div>
             </div>
             <div class="fila-inputs">
-                <div class="campo"><label>Valor Suelo (€)</label><input type="number" id="v_s"></div>
-                <div class="campo"><label>Valor Construido (€)</label><input type="number" id="v_c"></div>
+                <div class="campo"><label>Valor Suelo (€)</label><input type="number" id="v_s" oninput="guardarPlus()"></div>
+                <div class="campo"><label>Valor Construido (€)</label><input type="number" id="v_c" oninput="guardarPlus()"></div>
             </div>
             <div class="fila-inputs">
-                <div class="campo"><label>Precio Compra (€)</label><input type="number" id="p_c"></div>
-                <div class="campo"><label>Precio Venta (€)</label><input type="number" id="p_v"></div>
+                <div class="campo"><label>Precio Compra (€)</label><input type="number" id="p_c" oninput="guardarPlus()"></div>
+                <div class="campo"><label>Precio Venta (€)</label><input type="number" id="p_v" oninput="guardarPlus()"></div>
             </div>
             <button class="btn-calcular" onclick="calc()">CALCULAR</button>
         </div>
 
         <div id="res" class="tarjeta hidden">
             <div class="bloque-resumen-azul" id="meta-p"></div>
-            <div class="excel-box"><div class="excel-header">PLUSVALÍA SUELO</div><div class="excel-value" id="r_s">0 €</div></div>
-            <div class="excel-box"><div class="excel-header">PLUSVALÍA BENEFICIO</div><div class="excel-value" id="r_b">0 €</div></div>
-            <p style="text-align:center; color:#10b981; font-weight:bold;">✓ CÁLCULO FINALIZADO</p>
+            <div class="plusvalia-resultado-container">
+                <div class="bloque-oscuro-plusvalia">
+                    <span class="plus-label">PLUSVALÍA SUELO</span>
+                    <span class="plus-value" id="r_s">0,00 €</span>
+                </div>
+                <div class="bloque-oscuro-plusvalia">
+                    <span class="plus-label">PLUSVALÍA BENEFICIO</span>
+                    <span class="plus-value" id="r_b">0,00 €</span>
+                </div>
+            </div>
+            <div class="msg-finalizado">✓ CÁLCULO FINALIZADO</div>
         </div>
     </div>
 
     <script>
         const CLAVE = "marblau2026";
-        function comprobarPass() { if(document.getElementById('pass_input').value === CLAVE) { sessionStorage.setItem('sesion_marblau', 'ok'); verificarAcceso(); } }
-        function verificarAcceso() { if(sessionStorage.getItem('sesion_marblau') === 'ok') { document.getElementById('login-box').classList.add('hidden'); document.getElementById('contenido-privado').classList.remove('hidden'); } }
-        function cerrarSesion() { sessionStorage.clear(); location.reload(); }
+        function iniciarApp() { verificarAcceso(); recuperarPlus(); }
+        function comprobarPass() { if(document.getElementById('pass_input').value === CLAVE) { localStorage.setItem('sesion_marblau', 'ok'); verificarAcceso(); } }
+        function verificarAcceso() { if(localStorage.getItem('sesion_marblau') === 'ok') { document.getElementById('login-box').classList.add('hidden'); document.getElementById('contenido-privado').classList.remove('hidden'); } }
+        function cerrarSesion() { localStorage.clear(); location.reload(); }
+
+        function guardarPlus() {
+            const d = { fc: document.getElementById('f_c').value, fv: document.getElementById('f_v').value, vs: document.getElementById('v_s').value, vc: document.getElementById('v_c').value, pc: document.getElementById('p_c').value, pv: document.getElementById('p_v').value };
+            localStorage.setItem('datos_plus', JSON.stringify(d));
+        }
+        function recuperarPlus() {
+            const data = JSON.parse(localStorage.getItem('datos_plus'));
+            if(data) {
+                document.getElementById('f_c').value = data.fc; document.getElementById('f_v').value = data.fv;
+                document.getElementById('v_s').value = data.vs; document.getElementById('v_c').value = data.vc;
+                document.getElementById('p_c').value = data.pc; document.getElementById('p_v').value = data.pv;
+            }
+        }
 
         function calc() {
             const vs = parseFloat(document.getElementById('v_s').value), vc = parseFloat(document.getElementById('v_c').value);
             const pc = parseFloat(document.getElementById('p_c').value), pv = parseFloat(document.getElementById('p_v').value);
             const d1 = new Date(document.getElementById('f_c').value), d2 = new Date(document.getElementById('f_v').value);
             
-            let años = d2.getFullYear() - d1.getFullYear();
-            const coefs = {1:0.15, 2:0.14, 3:0.14, 4:0.16, 5:0.18, 6:0.19, 7:0.2, 8:0.19, 9:0.15, 10:0.12, 11:0.1, 12:0.09, 13:0.09, 14:0.09, 15:0.9, 16:0.1, 17:0.13, 18:0.17, 19:0.23, 20:0.4};
-            let c = coefs[años > 20 ? 20 : (años < 1 ? 1 : años)] || 0.15;
+            if(isNaN(d1) || isNaN(d2) || !vs) return alert("Faltan datos");
 
-            let plusSuelo = vs * c * 0.3;
-            let plusBen = (pv - pc) * (vs / vc) * 0.3;
+            let años = d2.getFullYear() - d1.getFullYear();
+            if (d2.getMonth() < d1.getMonth() || (d2.getMonth() === d1.getMonth() && d2.getDate() < d1.getDate())) años--;
+            if (años < 1) años = 1;
+
+            const coefs = {1:0.15, 2:0.14, 3:0.14, 4:0.16, 5:0.18, 6:0.19, 7:0.2, 8:0.19, 9:0.15, 10:0.12, 11:0.1, 12:0.09, 13:0.09, 14:0.09, 15:0.09, 16:0.1, 17:0.13, 18:0.17, 19:0.23, 20:0.4};
+            let c = coefs[años > 20 ? 20 : años] || 0.15;
+
+            let ps = vs * c * 0.3;
+            // Cálculo del beneficio real proporcional al suelo
+            let pb = (pv - pc) * (vs / (vs + vc)) * 0.3;
 
             document.getElementById('res').classList.remove('hidden');
-            document.getElementById('meta-p').innerHTML = `Años transcurridos: ${años} | Coeficiente aplicado: ${c}`;
-            document.getElementById('r_s').innerText = plusSuelo.toLocaleString('es-ES', {minimumFractionDigits:2}) + " €";
-            document.getElementById('r_b').innerText = (plusBen > 0 ? plusBen : 0).toLocaleString('es-ES', {minimumFractionDigits:2}) + " €";
+            document.getElementById('meta-p').innerText = `Años: ${años} | Coeficiente: ${c}`;
+            document.getElementById('r_s').innerText = ps.toLocaleString('es-ES', {minimumFractionDigits:2}) + " €";
+            document.getElementById('r_b').innerText = (pb > 0 ? pb : 0).toLocaleString('es-ES', {minimumFractionDigits:2}) + " €";
         }
     </script>
 </body>
