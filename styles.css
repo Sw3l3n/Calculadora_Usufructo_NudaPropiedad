@@ -289,3 +289,21 @@ input:focus {
     justify-content: center;
     gap: 5px;
 }
+
+/* Botón de copiar para usufructo */
+.btn-copiar-usuf {
+    background: #64748b;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    transition: background 0.2s;
+}
+
+.btn-copiar-usuf:hover {
+    background: #475569;
+}
